@@ -1,0 +1,17 @@
+[Header]
+IEMFileVersion,4
+Date,9/23/2016
+Workflow,GenerateFASTQ
+Application,NextSeq FASTQ Only
+Assay,TruSeq HT
+Description,
+Chemistry,Amplicon
+
+[Reads]
+111
+
+[Settings]
+
+[Data]
+Sample_ID,Sample_Name,Sample_Plate,Sample_Well,I7_Index_ID,index,I5_Index_ID,index2,Sample_Project,Description
+Sample,,,,D701,CCCCCC,D502,CCCCCC,,
