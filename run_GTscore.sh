@@ -59,6 +59,7 @@ cp $probes probes.txt
 mkdir split_seq/
 cd split_seq/
 perl ../GTscore/DemultiplexGTseq.pl -b ../barcodes.txt -s ../fastq/Undetermined_S0_R1_001.fastq 2>&1 | tee ${analysis_dir}/logs/demultiplexlog.out
+chmod 777 -R split_seq/
 echo "        
 	$(date): barcode split done.
 
