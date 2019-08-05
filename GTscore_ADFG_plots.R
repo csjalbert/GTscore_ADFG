@@ -37,7 +37,7 @@ for (i in seq_along(plate_list)) {
     coord_fixed(ratio=(13/12)/(9/8), xlim=c(0.5, 12.5), ylim=c(0.5, 8.5)) +
     scale_y_reverse(breaks=seq(1, 8), labels=LETTERS[1:8]) +
     scale_x_continuous(breaks=seq(1, 12)) + 
-    labs(title = paste("Plate Number:", platemap_genotypeRate_singleSNP$plate[i])) +
+    labs(title = paste("Plate Number:", plate_list[i])) +
     theme_bw()+
     theme(plot.title=element_text(hjust=0.5))
   plot_list[[i]] = p
