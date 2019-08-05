@@ -33,8 +33,8 @@ for (i in seq_along(plate_list)) {
     ggplot(subset(platemap_genotypeRate_singleSNP, platemap_genotypeRate_singleSNP$plate==plate_list[i]), 
            aes(x = Column, y = Row)) + 
     geom_point(aes(fill=GenotypeRate), color = "black", pch = 21, size=7) +
-    scale_fill_gradient2(low = "darkred",  mid = "yellow", high = "darkgreen", na.value = "purple",  midpoint = 0.5, limits = c(0,1)) + 
     coord_fixed(ratio=(13/12)/(9/8), xlim=c(0.5, 12.5), ylim=c(0.5, 8.5)) +
+    scale_fill_gradientn(colours = c("#d7191c", "#fdae61", "#ffffbf", "#ffffbf", "#2c7bb6"), breaks = c(0, 0.5, 0.70, 0.80, 1), na.value = "black", limits = c(0,1)) +
     scale_y_reverse(breaks=seq(1, 8), labels=LETTERS[1:8]) +
     scale_x_continuous(breaks=seq(1, 12)) + 
     labs(title = paste("Plate Number:", plate_list[i])) +
@@ -43,7 +43,7 @@ for (i in seq_along(plate_list)) {
   plot_list[[i]] = p
 }
 #print plots
-pdf("genotypeRateMaps.pdf")
+pdf("genotypeRateMapsByPlate.pdf")
 for (i in seq_along(plot_list)) {
   print(plot_list[[i]])
 }
