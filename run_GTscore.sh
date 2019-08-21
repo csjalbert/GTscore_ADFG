@@ -99,6 +99,7 @@ do
 	#split LOKI inputs
 	head -n1 LOKI_input.csv > LOKI_header
 	sed -i 1d LOKI_input.csv
+	sort -k4 -n LOKI_input.csv > tmp; mv tmp LOKI_input.csv # Sort by PlateID, so plate-wide issues can be handled in same 'split file'
 	split -l 500000 -a 1 --additional-suffix ".csv" LOKI_input.csv LOKI_input_split_
 	loki_inputs=( $(ls LOKI_input_split_*) )
 	for input in "${loki_inputs[@]}"
