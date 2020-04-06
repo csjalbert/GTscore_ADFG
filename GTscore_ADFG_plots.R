@@ -24,7 +24,7 @@ platemap_genotypeRate_singleSNP <- sample_genotypeRate_singleSNP %>%
 
 #plot genotype rate for each plate seperately
 #list of unique plates in project
-plate_list <- unique(platemap_genotypeRate_singleSNP$plate)
+plate_list <- sort(unique(platemap_genotypeRate_singleSNP$plate))
 #for loop to make ggplots
 plot_list = list()
 for (i in seq_along(plate_list)) {
