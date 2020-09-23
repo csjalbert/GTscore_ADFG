@@ -3,9 +3,11 @@
 #                                   POLYGEN REGENOTYPING CALCULATIONS
 #
 ################################################################################################
-library(stringr)
-library(ggplot2)
-library(pbapply)
+#library(stringr)
+#library(ggplot2)
+#library(pbapply)
+if(!require("pacman")) install.packages("pacman");library(pacman) # install and load pacman
+p_load(stringr, ggplot2, pbapply) # load or install+load required packages.
 
 #PolyGen is broken into two functions
 #The first function (polyGen) combines the locus table and read counts into a single file and submits to the second function
