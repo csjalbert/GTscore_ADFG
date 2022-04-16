@@ -90,6 +90,13 @@ do
 	$(date): Plots for $project done.
 	"
 
+        #create ADFG inhouse plots via plotly
+	#keeping the old version until I am happy with plotly edition
+        Rscript ../GTscore/GTscore_ADFG_plots_plotly.R 2>&1 | tee ${analysis_dir}/logs/GTscoreplotsplotly.out
+        echo "
+        $(date): Plots for $project done.
+        "
+
 	#create LOKI input
 	cp ../probes.txt ./
 	grep $project ../barcodes.txt > barcodes.txt
@@ -100,7 +107,8 @@ do
 	head -n1 LOKI_input.csv > LOKI_header
 	sed -i 1d LOKI_input.csv
 	sort -k4 -n LOKI_input.csv > tmp; mv tmp LOKI_input.csv # Sort by PlateID, so plate-wide issues can be handled in same 'split file'
-	split -l 500000 -a 1 --additional-suffix ".csv" LOKI_input.csv LOKI_input_split_
+	#split -l 500000 -a 1 --additional-suffix ".csv" LOKI_input.csv LOKI_input_split_
+	split -C 60MB -a 1 --additional-suffix ".csv" LOKI_input.csv LOKI_input_split_ #Split file at 60MB but end at whole line (-C)
 	loki_inputs=( $(ls LOKI_input_split_*) )
 	for input in "${loki_inputs[@]}"
 	do
