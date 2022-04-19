@@ -148,7 +148,7 @@ exportGenepop<-function(polygenResults,locusTable,exportParalogs=FALSE,sampleWhi
     locusTable<-locusTable %>% select(-correctionFactors)
   }
   #assign NTC's to sampleBlacklist
-  sampleBlacklist = data.frame(polyGenResults_singleSNP_correctedreads) %>% dplyr::select(tidyr::matches(match = "^.*_NTC_0_.*", ignore.case = FALSE)) %>% colnames()
+  sampleBlacklist = data.frame(polygenResults) %>% dplyr::select(tidyr::matches(match = "^.*_NTC_0_.*", ignore.case = FALSE)) %>% colnames()
   
   #filter locusTable and polyGenResults based on locus and sample whitelists and blacklists
   if(!is.null(locusWhitelist)){
@@ -193,7 +193,7 @@ exportGenepop<-function(polygenResults,locusTable,exportParalogs=FALSE,sampleWhi
   #convert bases to genepop code
   genepopBases<-apply(combinedData,1,alleleConvert)
   rownames(genepopBases)<-colnames(polygenResults)
-  rownames(genepopBases)<-extract(data = data.frame("samples" = rownames(genepopBases)), col = "samples", into = "rnames", regex = "^.*_([^_]*_[^_]*)_.*_.*", remove = TRUE) %>% pull() # extracting SILLY_fish
+  rownames(genepopBases)<-tidyr::extract(data = data.frame("samples" = rownames(genepopBases)), col = "samples", into = "rnames", regex = "^.*_([^_]*_[^_]*)_.*_.*", remove = TRUE) %>% pull() # extracting SILLY_fish
   rownames(genepopBases)<-paste(rownames(genepopBases),",",sep=" ") # added sep = space to fix file formatting
   colnames(genepopBases)<-combinedData$Locus_ID
   #print (genepopBases[1:5,1:5])
@@ -948,7 +948,7 @@ correctReads<-function(locusTable,readCounts){
   results<-t(results)
   #add sample names back
   colnames(results)<-colnames(readCounts)
-  results <- data.frame(results) # turning into dataframe instead of matrix
+ # results <- data.frame(results) # turning into dataframe instead of matrix
   return(results)
 }
 
