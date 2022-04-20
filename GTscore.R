@@ -513,7 +513,7 @@ plotGenotypes_setup<-function(genoData,type,savePlot,saveDir){
 	#save plot if specified
 	if(savePlot=="Y"){
 		JPGoutfile<-paste(saveDir,"/",locusID,"_",type,".jpg",sep="")
-		jpeg(file=JPGoutfile)
+		jpeg(file=JPGoutfile, type="cairo") # can remove type="cairo" if X11 is avaialble on system
 		print(genoPlot)
 		#capture.output(dev.off(),file=NULL)
 		dev.off()
