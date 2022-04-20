@@ -73,4 +73,4 @@ plots <- lapply(seq_along(plate_list), function(i) {
 })
 
 # generate an interactive html with plots.
-htmltools::save_html(html = htmltools::browsable(x = htmltools::tagList(plots)), file = paste0(unique(platemap_genotypeRate_singleSNP$project),"_genotypeRatePlots.html"))
+htmltools::save_html(html = htmltools::browsable(x = htmltools::tagList(plots)), file = "genotypeRatePlots.html")
