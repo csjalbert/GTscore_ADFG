@@ -25,7 +25,7 @@ polyGenResults_singleSNP[1:5,1:5]
 write.table(polyGenResults_singleSNP,"polyGenResults_singleSNP.txt",quote=FALSE,sep="\t")
 
 #Correct reads if correctionFactors are supplied:
-haplotype_alleleReads <- correctReads(locusTable = haplotype_locusTable, readCounts = haplotype_alleleReads)
+#haplotype_alleleReads <- correctReads(locusTable = haplotype_locusTable, readCounts = haplotype_alleleReads)
 
 #generate haplotype genotypes
 polyGenResults_haplotypes<-polyGen(haplotype_locusTable,haplotype_alleleReads)
