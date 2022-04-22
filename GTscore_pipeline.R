@@ -15,7 +15,12 @@ haplotype_locusTable<-read.delim("LocusTable_haplotypes.txt",header=TRUE)
 haplotype_alleleReads<-read.delim("AlleleReads_haplotypes.txt",header=TRUE,row.names=1)
 
 #Correct reads if correctionFactors are supplied:
-singleSNP_alleleReads <- correctReads(locusTable = singleSNP_locusTable, readCounts = singleSNP_alleleReads)
+if("correctionFactors" %in% colnames(singleSNP_locusTable)){
+	print("Using correction factors")
+	singleSNP_alleleReads <- correctReads(locusTable = singleSNP_locusTable, readCounts = singleSNP_alleleReads)
+} else {
+	print("Not using correction factors")
+}
 
 #generate singleSNP genotypes
 polyGenResults_singleSNP<-polyGen(singleSNP_locusTable,singleSNP_alleleReads)
