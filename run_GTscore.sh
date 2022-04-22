@@ -123,7 +123,8 @@ do
 	#clean up project_outputs dir
 	cat LOKI_header LOKI_input.csv > tmp; mv tmp LOKI_input_all.csv
 	rm LOKI_header LOKI_input.csv
-	rename "s/^/${project}_/" *
+	rename "s/^/${project}_/" * #rename all files to the project name
+	rename "s/${projects}_//" ${projects}_lib # remove project name from library directory for plotly genotype rate plot
 	cd ../split_seq/
 done
 
