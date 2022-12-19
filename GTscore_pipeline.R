@@ -25,7 +25,7 @@ if("correctionFactors" %in% colnames(singleSNP_locusTable)){
 #generate singleSNP genotypes
 polyGenResults_singleSNP<-polyGen(singleSNP_locusTable,singleSNP_alleleReads)
 #look at first five rows and columns
-polyGenResults_singleSNP[1:5,1:5]
+#polyGenResults_singleSNP[1:5,1:5]
 #write results
 write.table(polyGenResults_singleSNP,"polyGenResults_singleSNP.txt",quote=FALSE,sep="\t")
 
@@ -35,7 +35,7 @@ write.table(polyGenResults_singleSNP,"polyGenResults_singleSNP.txt",quote=FALSE,
 #generate haplotype genotypes
 polyGenResults_haplotypes<-polyGen(haplotype_locusTable,haplotype_alleleReads)
 #look at first five rows and columns
-polyGenResults_haplotypes[1:5,1:5]
+#polyGenResults_haplotypes[1:5,1:5]
 #write results to file
 write.table(polyGenResults_haplotypes,"polyGenResults_haplotypes.txt",quote=FALSE,sep="\t")
 
