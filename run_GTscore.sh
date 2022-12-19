@@ -100,7 +100,8 @@ do
 	#create LOKI input
 	cp ../probes.txt ./
 	grep $project ../barcodes.txt > barcodes.txt
-	perl /mnt/anc_gen_cifs_research/Software/GTscore_1.3/GTscore2LOKI.pl 
+	perl /mnt/anc_gen_cifs_research/Software/GTscore_1.3/GTscore2LOKI.pl # script to convert to LOKI format, uncorrected (haplotypes)
+	#perl /mnt/anc_gen_cifs_research/Software/GTscore_1.3/GTscore2LOKI_singleSNPs.pl # hacked for now to allow for read corrected LOKI file 
 	grep -v ",NTC," LOKI_input.csv > tmp; mv tmp LOKI_input.csv
 
 	#split LOKI inputs
