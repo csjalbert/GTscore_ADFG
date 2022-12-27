@@ -1,0 +1,20 @@
+This is semi-automated. To run you need to copy the ADFG_rescore_loci.R, ADFG_rescore.sh, loci2rescore.txt, and relevant (SEAK or WAK NOT BOTH) loci2_remove.txt files to the parent directory of the project. This will be located outside /project_outputs. Then you simply run the command "./ADFG_rescore.sh project" and it takes care of the rest. 
+
+Here is an example using WAK project K100 (this is fake):
+\K100_200001011200
+  \K100_outputs\
+    \lots of files
+  \K100QC_outputs\
+    \lots of files
+  \ADFG_rescore_loci.R
+  \ADFG_rescore.sh
+  \loci2rescore.txt
+  \loci2_remove_WAK.txt
+  
+from the K100_200001011200 directory, I'd run the following:
+./ADFG_rescore.sh K100
+... it would do it's thing and you should see no errors, otherwise troubleshoot.
+Then, I would run:
+./ADFG_rescore.sh K100QC
+.. this will take care of the QC now. 
+This should be done for all projectxx_outputs, that you want to rescore. 
