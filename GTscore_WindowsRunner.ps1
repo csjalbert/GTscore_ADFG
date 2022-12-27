@@ -53,5 +53,5 @@ if (Test-Path -Path "nohup.out" -PathType leaf) {
 	Remove-Item GTscore_WindowsRunner.ps1
 	Write-Output "`nEnsure you have the SampleSheet.csv and Panel.txt in this directory, then try again if you please.`n"
 }
-Write-Host -NoNewLine 'Press any key to close window.'
+Write-Host -NoNewLine 'If you are using the IDFG299 panel, let Heather and Chase know the project needs to be rescored prior to importing data... Press any key to close window.'
 $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
