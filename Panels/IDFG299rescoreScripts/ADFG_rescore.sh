@@ -18,8 +18,16 @@ cd ${project}_outputs # enter into project directory
 
 rm ${project}_LOKI_input_split_*.csv # remove old loki split files
 
+## Note, I am on a headless server but installed a lightweight version of X11 for plotting
+# Start Xvfb 
+Xvfb :1 -screen 0 1024x768x16 &
+# Set the DISPLAY environment variable for R to use Xvfb
+export DISPLAY=:1
 # call genotypes and make new LOKI file + plots
 Rscript ../ADFG_rescore_loci.R $1 # script to rescore 7 keeper loci
+# Kill the Xvfb process after done with plots
+killall Xvfb
+## Done with graphical interface
 
 # ditch bad loci from LOKI file 
 grep -vFf ../loci2remove_*.txt ${project}_LOKI_input_all.csv > LOKI_input.csv # this needs to be project specific - SEAK, CI, YUK, etc remove their own
