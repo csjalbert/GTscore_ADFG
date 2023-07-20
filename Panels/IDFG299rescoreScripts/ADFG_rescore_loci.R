@@ -30,7 +30,7 @@
 
 #args <- commandArgs(TRUE)
 #print(args)
-
+graphics.off() # reset graphics state 
 library(tidyverse)
 
 # Setup working directory - at this point this script is run from within the genotype folder
@@ -143,44 +143,44 @@ genoplot.f <-
       
       if (type == "ratio") {
         genoPlot <- ggplot2::ggplot() +
-          geom_histogram( data = sub_genodata, aes(x = ratios, color = genotype, fill = genotype),
+          ggplot2::geom_histogram( data = sub_genodata, ggplot2::aes(x = ratios, color = genotype, fill = genotype),
                           binwidth = 0.01, 
                           alpha = 0.5,
                           na.rm = TRUE) +
-          labs(title = marker,
+          ggplot2::labs(title = marker,
                x = "Allele Ratio",
                y = "Frequency",
                subtitle = summaryText) +
-          theme_bw() + 
-          theme(plot.title = element_text(hjust = 0.5),
+          ggplot2::theme_bw() + 
+          ggplot2::theme(plot.title = element_text(hjust = 0.5),
                 plot.subtitle = element_text(hjust = 0.5)) +
-          scale_x_continuous(breaks = seq(0, 1, 0.1), limits = c(-0.01, 1.01)) +
-          scale_color_hue(drop = FALSE, breaks = levels(droplevels(sub_genodata$genotype)))
+          ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.1), limits = c(-0.01, 1.01)) +
+          ggplot2::scale_color_hue(drop = FALSE, breaks = levels(droplevels(sub_genodata$genotype)))
         
       } else if (type == "scatter_ratio") {
         genoPlot <- ggplot2::ggplot() +
-          geom_point(data = sub_genodata, aes(x = ratios, y = totalreads, color = genotype), na.rm = TRUE) +
-          labs(title = marker,
+          ggplot2::geom_point(data = sub_genodata, ggplot2::aes(x = ratios, y = totalreads, color = genotype), na.rm = TRUE) +
+          ggplot2::labs(title = marker,
                x = "Allele Ratio",
                y = "Total Reads",
                subtitle = summaryText) +
-          theme_bw() +
-          theme(plot.title = element_text(hjust = 0.5),
+          ggplot2::theme_bw() +
+          ggplot2::theme(plot.title = element_text(hjust = 0.5),
                 plot.subtitle = element_text(hjust = 0.5)) +
-          scale_x_continuous(breaks = seq(0,1,0.05), limits = c(-0.01, 1.01)) + 
-          scale_color_hue(drop = FALSE, breaks = levels(droplevels(sub_genodata$genotype)))
+          ggplot2::scale_x_continuous(breaks = seq(0,1,0.05), limits = c(-0.01, 1.01)) + 
+          ggplot2::scale_color_hue(drop = FALSE, breaks = levels(droplevels(sub_genodata$genotype)))
         
       } else if(type=="scatter"){
         genoPlot <- ggplot2::ggplot()+
-          geom_point(data = sub_genodata, aes(x = allele1count, y = allele2count, color = genotype)) +
-          xlim( range( sub_genodata$allele1count, sub_genodata$allele2count)) +
-          ylim( range( sub_genodata$allele1count, sub_genodata$allele2count)) +
-          labs( title = marker , x = "Allele 1 Reads", y = "Allele 2 Reads", subtitle = summaryText) + 
-          coord_fixed( ratio = 1) +
-          theme_bw() +
-          theme(plot.title = element_text(hjust = 0.5),
+          ggplot2::geom_point(data = sub_genodata, ggplot2::aes(x = allele1count, y = allele2count, color = genotype)) +
+          ggplot2::xlim( range( sub_genodata$allele1count, sub_genodata$allele2count)) +
+          ggplot2::ylim( range( sub_genodata$allele1count, sub_genodata$allele2count)) +
+          ggplot2::labs( title = marker , x = "Allele 1 Reads", y = "Allele 2 Reads", subtitle = summaryText) + 
+          ggplot2::coord_fixed( ratio = 1) +
+          ggplot2::theme_bw() +
+          ggplot2::theme(plot.title = element_text(hjust = 0.5),
                 plot.subtitle = element_text(hjust = 0.5))+ 
-          scale_color_hue(drop = FALSE, breaks = levels(droplevels(sub_genodata$genotype)))
+          ggplot2::scale_color_hue(drop = FALSE, breaks = levels(droplevels(sub_genodata$genotype)))
       }
       
       # save plot if specified
