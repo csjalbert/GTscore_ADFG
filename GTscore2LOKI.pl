@@ -1,6 +1,10 @@
 #!/usr/bin/perl
 
-use strict; use warnings;
+use strict;
+use warnings;
+
+print "Running GTscore2LOKI.pl (not using corrections)\n"; # tells which loki script got run
+
 my %get_primer = ();
 my %get_probes = (); #hash of probe information, 1d = locus, 2d=pos
 my %get_SNP_alleles = ();  
