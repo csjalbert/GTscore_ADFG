@@ -19,7 +19,7 @@ cd ${project}_outputs # enter into project directory
 rm ${project}_LOKI_input_split_*.csv # remove old loki split files
 
 ## Note, I am on a headless server but installed a lightweight version of X11 for plotting
-# Start Xvfb 
+# Start Xvfb with with display :1 and a screen resolution of 1024x768x16 in the background (&) 
 Xvfb :1 -screen 0 1024x768x16 &
 # Set the DISPLAY environment variable for R to use Xvfb
 export DISPLAY=:1
@@ -64,5 +64,6 @@ grep -v ",NTC," LOKI_input_rescore.csv > tmp; mv tmp LOKI_input_rescore.csv
 	mkdir not_rescored/ # make new directory for old raw outputs
 	find . -maxdepth 1 -mindepth 1 -type f ! -name '*rescore*' -exec mv {} not_rescored \; # move all files except those that say rescore
 	mv ${project}_scatterPlots/ not_rescored/
+	mv lib/ not_rescored/ # move the lib/ directory to not_rescored/
 
 
