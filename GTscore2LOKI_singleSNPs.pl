@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-print "Running GTscore2LOKI.pl (not using corrections)\n"; # tells which loki script got run
+print "Running GTscore2LOKI_singleSNPs.pl (using corrections)\n"; # tells which loki script got run
 
 my %get_primer = ();
 my %get_probes = (); #hash of probe information, 1d = locus, 2d=pos
@@ -14,6 +14,7 @@ while(<PROBES>) { #loop through probes, save info to hash
 	$_ =~ s/\cM\cJ|\cM|\cJ/\n/g; #dos format catch
 	my $line = $_; chomp($line);
 	my @tabs = split(/\t/,$line);
+	$tabs[0] = "$tabs[0]_$tabs[2]"; #single snp locus/allele files are locus_SNPpos so hacking here to match
 	$get_primer{$tabs[0]} = $tabs[7];
 	$get_probes{$tabs[0]}{$tabs[2]} = "$tabs[5]/$tabs[6]";
 	$get_SNP_alleles{$tabs[0]}{$tabs[2]} = "$tabs[3]/$tabs[4]";
@@ -21,7 +22,7 @@ while(<PROBES>) { #loop through probes, save info to hash
 close PROBES;
 
 my %get_haplo_alleles = ();
-open(LOCUSTABLE, "<LocusTable_haplotypes.txt") or die; <LOCUSTABLE>;
+open(LOCUSTABLE, "<LocusTable_singleSNPs.txt") or die; <LOCUSTABLE>;
 while(<LOCUSTABLE>){
 	my $line = $_; chomp($line);
 	my @tabs = split(/\t/,$line);
@@ -31,12 +32,12 @@ while(<LOCUSTABLE>){
 }
 close LOCUSTABLE;
 
-open(GENOS, "<polyGenResults_haplotypes.txt") or die; 
+open(GENOS, "<polyGenResults_singleSNP.txt") or die; 
 my $geno_sample_order = <GENOS>; chomp($geno_sample_order);
 $geno_sample_order = "\t" . $geno_sample_order;
 $geno_sample_order =~ s/\t/,/g;
 
-open(COUNTS, "<AlleleReads_haplotypes.txt") or die;
+open(COUNTS, "<AlleleReads_singleSNPs.txt") or die;
 my $count_sample_order = <COUNTS>; chomp($count_sample_order);
 $count_sample_order =~ s/\t/,/g;
 
@@ -82,6 +83,7 @@ while(<GENOS>) {
 			$genotype = $geno_tabs[$col_counter];	
 			$genotype =~ s/0/0,0/g;
 			$genotype =~ s/,/\//g;
+			$locus =~ s/_1$//g; #removing SNPpos that I added above
 
 			print OUT "$sampleID,$locus,$positions,$haplo_alleles,$count,$genotype,$SNP_alleles,$probes,$primer\r\n";
 

@@ -1,20 +1,22 @@
 #!/bin/bash
-if [ $# != 3 ]; then
-	echo "usage: ~$ run_GTscore.sh bcl_dir barcodes probelist"
+#check if less than 3 inputs or more than 4, 4th is optional, hidden for read corrections
+if [ $# -lt 3 ] || [ $# -gt 4 ]; then
+	echo "usage: ~$ run_GTscore.sh bcl_dir barcodes probelist correctrescore[optional; true/false; default = false, normal scoring]"
 	exit
-fi
+fi 
 echo "START TIME: $(date)
 START DIR: $(pwd)
-COMMAND: run_GTscore.sh $1 $2 $3
+COMMAND: run_GTscore.sh $1 $2 $3 ${4:-false}
 
 
 "
 
 #set working variables
 SECONDS=0
-bcl_dir=$1 ##directory containing Illumina Output format="181114_NB501665_0049_AHNCM3BGX7"
-barcodes=$2 ##SampleSheet
-probes=$3 ##Panel
+bcl_dir=$1 #directory containing Illumina Output format="181114_NB501665_0049_AHNCM3BGX7"
+barcodes=$2 #SampleSheet
+probes=$3 #Panel
+correctrescore=${4:-false} #Check if the 'correctrescore' variable is provided (defaults to false if not provided). Used to determine which GTscore2LOKI.pl to use (single_snp or haplo based on if we used corrections).
 date=$(date +%Y%m%d%H%M)
 flowcell=$(echo $bcl_dir | cut -d"_" -f 4 | sed 's:/$::')
 cd ${bcl_dir}
@@ -90,17 +92,36 @@ do
 	$(date): Plots for $project done.
 	"
 
+        #create ADFG inhouse plots via plotly
+	#keeping the old version until I am happy with plotly edition
+        Rscript ../GTscore/GTscore_ADFG_plots_plotly.R 2>&1 | tee ${analysis_dir}/logs/GTscoreplotsplotly.out
+        echo "
+        $(date): Plots for $project done.
+        "
+
 	#create LOKI input
 	cp ../probes.txt ./
 	grep $project ../barcodes.txt > barcodes.txt
-	perl /mnt/anc_gen_cifs_research/Software/GTscore_1.3/GTscore2LOKI.pl 
+	## Check if optional read corrected rescore input is TRUE and use relevant scoring conversion
+	if [ "$correctrescore" = false ]; then
+		perl /mnt/anc_gen_cifs_research/Software/GTscore_1.3/GTscore2LOKI.pl 2>&1 | tee "${analysis_dir}/logs/LOKI.out"
+		echo "
+		$(date): Not rescored for LOKI (i.e., GTscore2LOKI.pl - uncorrected scoring method used), since correctedrescore was false.
+		"
+	else
+		perl /mnt/anc_gen_cifs_research/Software/GTscore_1.3/GTscore2LOKI_singleSNPs.pl 2>&1 | tee "${analysis_dir}/logs/LOKI.out"
+		echo "
+		$(date): Rescored for LOKI (i.e., GTscore2LOKI_singleSNPs.pl - corrected scoring method used), since correctedrescore was true.
+		"
+	fi
 	grep -v ",NTC," LOKI_input.csv > tmp; mv tmp LOKI_input.csv
 
 	#split LOKI inputs
 	head -n1 LOKI_input.csv > LOKI_header
 	sed -i 1d LOKI_input.csv
 	sort -k4 -n LOKI_input.csv > tmp; mv tmp LOKI_input.csv # Sort by PlateID, so plate-wide issues can be handled in same 'split file'
-	split -l 500000 -a 1 --additional-suffix ".csv" LOKI_input.csv LOKI_input_split_
+	#split -l 500000 -a 1 --additional-suffix ".csv" LOKI_input.csv LOKI_input_split_
+	split -C 60MB -a 1 --additional-suffix ".csv" LOKI_input.csv LOKI_input_split_ #Split file at 60MB but end at whole line (-C)
 	loki_inputs=( $(ls LOKI_input_split_*) )
 	for input in "${loki_inputs[@]}"
 	do
@@ -115,7 +136,8 @@ do
 	#clean up project_outputs dir
 	cat LOKI_header LOKI_input.csv > tmp; mv tmp LOKI_input_all.csv
 	rm LOKI_header LOKI_input.csv
-	rename "s/^/${project}_/" *
+	rename "s/^/${project}_/" * #rename all files to the project name
+	rename "s/${project}_//g" ${project}_lib # remove project name from library directory for plotly genotype rate plot
 	cd ../split_seq/
 done
 
