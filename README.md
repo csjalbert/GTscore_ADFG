@@ -3,7 +3,7 @@
 
 This is ADF&Gs internal pipeline for GTseq utilizing McKinney's [GTscore](https://github.com/gjmckinney/GTscore) pipeline for genotyping. 
 
-Here is the introduction from the original GTscore documnetation (I highly recommend reviewing the full document):
+Here is the introduction from the original GTscore documentation (I highly recommend reviewing the full document):
 
 
 # Introduction (*from GTscoreDocumentaton V1.3*)
