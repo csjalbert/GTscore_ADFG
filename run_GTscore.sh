@@ -1,7 +1,7 @@
 #!/bin/bash
 #check if less than 3 inputs or more than 4, 4th is optional, hidden for read corrections
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-	echo "usage: ~$ run_GTscore.sh bcl_dir barcodes probelist correctrescore[optional; true/false; default = false, normal scoring]"
+	echo "usage: ~$ run_GTscore.sh bcl_dir barcodes probelist correctreads[optional; true/false; default = false, normal scoring]"
 	exit
 fi 
 echo "START TIME: $(date)
@@ -16,7 +16,7 @@ SECONDS=0
 bcl_dir=$1 #directory containing Illumina Output format="181114_NB501665_0049_AHNCM3BGX7"
 barcodes=$2 #SampleSheet
 probes=$3 #Panel
-correctrescore=${4:-false} #Check if the 'correctrescore' variable is provided (defaults to false if not provided). Used to determine which GTscore2LOKI.pl to use (single_snp or haplo based on if we used corrections).
+correctreads=${4:-false} #Check if the 'correctreads' variable is provided (defaults to false if not provided). Used to determine which GTscore2LOKI.pl to use (single_snp or haplo based on if we used corrections).
 date=$(date +%Y%m%d%H%M)
 flowcell=$(echo $bcl_dir | cut -d"_" -f 4 | sed 's:/$::')
 cd ${bcl_dir}
@@ -103,15 +103,15 @@ do
 	cp ../probes.txt ./
 	grep $project ../barcodes.txt > barcodes.txt
 	## Check if optional read corrected rescore input is TRUE and use relevant scoring conversion
-	if [ "$correctrescore" = false ]; then
+	if [ "$correctreads" = false ]; then
 		perl /mnt/anc_gen_cifs_research/Software/GTscore_1.3/GTscore2LOKI.pl 2>&1 | tee "${analysis_dir}/logs/LOKI.out"
 		echo "
-		$(date): Not rescored for LOKI (i.e., GTscore2LOKI.pl - uncorrected scoring method used), since correctedrescore was false.
+		$(date): Not rescored for LOKI (i.e., GTscore2LOKI.pl - uncorrected scoring method used), since correctrescore was false.
 		"
 	else
 		perl /mnt/anc_gen_cifs_research/Software/GTscore_1.3/GTscore2LOKI_singleSNPs.pl 2>&1 | tee "${analysis_dir}/logs/LOKI.out"
 		echo "
-		$(date): Rescored for LOKI (i.e., GTscore2LOKI_singleSNPs.pl - corrected scoring method used), since correctedrescore was true.
+		$(date): Rescored for LOKI (i.e., GTscore2LOKI_singleSNPs.pl - corrected scoring method used), since correctrescore was true.
 		"
 	fi
 	grep -v ",NTC," LOKI_input.csv > tmp; mv tmp LOKI_input.csv
