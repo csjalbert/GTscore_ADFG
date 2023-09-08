@@ -1,0 +1,600 @@
+---
+title: "GTscore training"
+creator: "Chase Jalbert"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+**Important 9/2023 -- This is a work in progress. At this point, it's a triage document to help folks get the logged into the server and start the pipeline. Feedback is welcome. Please ask questions if you need clarification or help.**
+
+This is a training guide for the ADF&G GTscore pipeline. The focus will be on our custom version of GTscore. That said, I *highly* encourage users read through Garrett's [github](https://github.com/gjmckinney/GTscore) or at least download the manual [here](https://github.com/csjalbert/GTscore_ADFG/blob/master/GTScoreDocumentation%20V1.3.docx) and give a quick skim.
+
+The goal of this document is to give users the tools to run the ADF&G pipeline from Windows and Linux and to troubleshoot common issues. Advanced troubleshooting is done on a case-by-case basis and depends on users comfort with the command line, so will largely be left off this document.
+
+In this document, project *`S100`* will be used for demonstration purposes. You'll change *`S100`* to whatever project you're working on. The guide assumes a basic level of Linux experience. If you need help with the command line interface (CLI), check out the [Helpful Linux Resources] section or search the internet for tutorials like [this](https://ubuntu.com/tutorials/command-line-for-beginners#1-overview)[^1].
+
+[^1]: This is probably even more helpful then the helpful section I made... I'd start here.
+
+**If nothing else you can skip to** [Quick (3-step) project run](#quick-3-step-project-run) **for a 3-step guide on how to start a project via Linux. Good luck.**
+
+# Introduction
+
+Again, now is a good time to read the official [documentation](https://github.com/csjalbert/GTscore_ADFG/blob/master/GTScoreDocumentation%20V1.3.docx).
+
+"The pipeline" consists of a series of Perl, R, bash, and even a PowerShell script that are used to analyze and archive the data coming from the sequencer.
+
+In short, lab staff prep and run projects on the sequencer, then transfer the raw data to the genetics server and start the pipeline. Lab staff are operating within Windows and do not have access to all parts of the server, nor do they have access to the pipeline itself (i.e., once they hit go, they're in the dark until files show up). You, the advanced user, will have total unfettered access...try not to break anything.
+
+# Preparing your computer
+
+There are a few things that need to happen before you can effectively run and/or troubleshoot the pipeline. This guide starts with general computer set up, so if you already have access to the genetics domain, and are familiar with the server layout, you can skip to [Project Setup (Pre-pipeline)](#project-setup-pre-pipeline).
+
+## Gain access to the genetics domain
+
+At this point, the genetics server is on a different domain and is not accessible from the 'normal' SOA network.
+
+-   Ask OIT for a genetics domain account - send an email/ticket and someone may help.
+    -   The log in is different than your normal SOA account:
+
+        `\GENETICS\username`
+
+    -   Your password is different, or it can be the same. You're the one who sets it, so do whatever you want, Tarzan.
+
+    -   These passwords do not expire on a time frame, like the normal SOA passwords.
+-   Ask OIT to enable a genetics domain VPN.
+    -   A genetics domain VPN is optional but recommended, even if you're in the Anchorage office. While in the office, a hardwired connection is preferred, but the VPN allows you to quickly log in from anywhere or even your SOA laptop, if needed.
+
+    -   The genetics (Meraki) VPN is nonstandard and OIT doesn't set it up fully.
+
+        -   For you DIYers, [here](https://documentation.meraki.com/MX/Client_VPN/Client_VPN_OS_Configuration) is the VPN configuration that I recommend. Scroll down to "Windows" and follow their steps, paying attention to the Microsoft set up link they provide. This works well and is built into Windows so doesn't require extra software (i.e., not AnyConnect).
+        -   **For security reasons, I won't post the entire process, so you'll have to *contact me once you have a VPN account and we can finalize the set up.***
+
+    -   It's worth noting that your VPN password is probably different than the genetics domain password. This has been a source of confusion for many, since you really just use it on first set-up then forget...write it on that sticky note on the bottom of your laptop or something.
+
+    -   Finally, here is the [meraki site](https://n97.network-auth.com/account/account_login). We can't do anything except change VPN passwords. It's useful for checking that your VPN password is correct (i.e., if you can log in you're using the right one) and to reset your own password (no OIT needed).
+
+        *pro tip - if you're having sudden connection issues, you've successfully connected in the past, and you can log into the Meraki site, ask OIT to check your "genetics domain vpn expiry date". Generally, access is granted for 1 year. I've spent hours troubleshooting only to find out that my VPN expired.*
+
+## Install [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
+
+PuTTY is the recommended terminal that's used to SSH into the server. We want the full install as starting from a Windows computer requires a few pieces that are installed automatically with a full installation of PuTTY.
+
+If you're on an SOA computer, you very likely need the "*64-bit x86*" version. OIT has to install this if you don't have admin rights.
+
+-   The program set up consists of adding the hostname (or IP address), port, and ensuring you have SSH selected.
+
+    -   `host: dfggenubuntu1.genetics.local`
+
+    -   `port: 22`
+
+    -   *`check`* `SSH`
+
+    -   `dropdown menu should say "Telnet"`
+
+        *pro tip - In the "Saved Sessions" area, click on "Default Settings" or type a new "Saved Session" and hit Save. Otherwise you'll have to type in the server info each time. I set it as my default so it's always loaded when I open PuTTY.*
+
+-   You can look through the settings (options on left side of screen) but the only thing I regularly mess with is the appearance (font size, etc.).
+
+## Map network drive, if you desire.
+
+-   You can map the server as a network drive in Windows. It's highly recommended that you use "`Z:`" as some of the scripts are hard-coded to this. That said, advanced users like yourself don't need this since you'll be using the CLI and will never again be subject to the Windows GUI[^2].
+
+-   Open Windows Explorer and
+
+    -   Right click This PC -\> Map Network Drive...
+
+    -   you should see a window asking "What network folder would you like to map?" Use the following:
+
+        -   Drive: `Z:`
+
+        -   Folder: `\\dfggenna-cifs.genetics.local`
+
+        -   `Check` `"Reconnect at sign-in"`
+
+        -   *situation dependent\**-- `Check` `"connect using different credentials"`
+
+            *\*If you have a 'genetics domain' computer, your credentials will work and you leave this box unchecked. If you're connecting via a normal SOA computer, you'll have to connect using genetics domain credentials (`\GENETICS\username`), so will need to check the box.*
+
+[^2]: Actually you should probably do this as it's helpful for transferring results back to the GCL shared drive (aka `V:`). Also, sticking to `Z:` is helpful for talking the same talk as the lab staff. It was confusing when everyone had different drive letters.
+
+## Profit?
+
+At this point you should be ready to connect to the server[^3]. Skip to [Logging into the server] for details on how to SSH in via PuTTY terminal.
+
+[^3]: I'm not convinced you can actually make money off this.
+
+# Logging into the server
+
+You can access the server via Windows Explorer (assuming you mapped the `Z:` drive), but you'll be limited in what you do. It's useful for transferring files to and from the server but most of the time you'll want to connect via PuTTY.
+
+At this point you should have completed all the steps outlined in [Preparing your computer]. Now it's time to fire up PuTTY and connect, using the following steps:
+
+1)  Open PuTTY (go ahead and click on that icon, you earned it)
+
+2)  Select your saved profile (default if you're ~~lazy~~ smart like me) or type in the connection information again.
+
+3)  Click "Open"
+
+-   You should now see a log in window with the following text:\
+    `"login as:"`
+    -   Type your genetics domain username and hit enter
+        -   Your genetics account username goes here.
+        -   Just the username, not your email and no domain added.
+-   It will ask for your password
+    -   Type your genetics domain password and hit enter
+        -   **You will not see anything as you type your password but don't worry, you're typing like a mad scientist.**
+        -   If you think you messed up, hit backspace a bunch of times, then add a few more for good measure, and try again
+-   If all goes according to plan, you will see a welcome screen with some information. I'm not sure I've fully read it but it's something to do with space available and number of outstanding updates[^4].
+
+[^4]: Sidetrack -- We are in charge of updating the server. That said, be careful. We are also in charge of fixing it. I usually get a list of all updates and spend a few minutes looking for anything that may impact the pipeline. I'm not an expert here so I'm not always successful at preemptively identifying issues and have broken things. I strongly encourage you to save a list of available updates before updating, so if something breaks you can figure out what the hell you just did. That said, feel free to leave updates to me unless you know of something that you need.
+
+# Server Layout
+
+Now that you're in, you'll see that it's a normal Ubuntu server command line interface. There is no graphical interface, we removed this to save space and RAM (yup, we were [are?] getting desperate).
+
+You should be logged into `/home/GENETICS.LOCAL/username` - this is your local account. You're free to do what you want here. Again, have fun, Tarzan.
+
+To access the pipeline-related section of the server you can navigate to:
+
+`/mnt/anc_gen_cifs_research/`
+
+Here you'll see a set of directories that are required by the pipeline. These specific directories are necessary. **Do not modify them in any way or you will break things.** Also, permissions for each directory have been set to only allow access by certain individuals, again limiting who can make messes.
+
+1)  `/Analysis`
+
+    -   This serves as a spot to hold files for ongoing analyses. Generally each project leader would have a directory here and the pipeline has a directory (`GTscore/`, if you couldn't guess).
+
+    -   In terms of the pipeline, this is where project files are moved after you hit go, and where the analysis is occurring
+
+        -   Do not move analysis files while a project is running or you will break things.
+
+2)  `/Archive`
+
+    -   This is where projects are stored after analysis.
+
+    -   There are 5 directories within `/Archive`:
+
+        -   `1_Pending/`
+
+        -   `2_ToArchive/`
+
+        -   `3_Archived/`
+
+        -   `4_OnBackup/`
+
+        -   `screenlogs/` (just for log files)
+
+    -   The directories represent different steps of the archival process. Archiving is fairly complicated and deserves a dedicated section ([Archiving]), so I'll keep it simple here --
+
+        **You only need to worry about, 1_Pending/**
+
+    -   After the pipeline runs, everything is moved into `/Archive/1_Pending/`
+
+        -   This is where you would go to find a recently completed analysis. This is worth remembering, as sometimes the lab needs a hand moving files back to `Illumina_DROPOFF` so they can re-run a project or simply getting more information from a run.
+
+3)  `/Illumina_DROPOFF`
+
+    -   This is where the raw data that comes off the sequencer ends up ("bcl_dir" - we'll get back to this). Lab staff make a project directory (e.g., `S100`) and transfer all of the files required to start the pipeline to this directory.
+    -   The pipeline is only run from this folder. Everything is set up to run from here, so make sure your project is here before starting.
+
+4)  `/Results_PICKUP`
+
+    -   This is where the output ends up. Note that it is just the output, with no intermediate steps or analysis.
+
+    -   This directory has open permissions so you can see and modify files from Windows.
+
+    -   This is where you go to copy results back to your machine for uploading to the shared drive, `V:`.
+
+    -   For the sake of drive space, once results are transferred to the shared drive, it's useful if you remove them from here. One way to do this is to "cut" rather than "copy".
+
+        *pro tip - Any results stored here are a copy, so if you accidentally delete or break them somehow, it's okay. The project output is still located in the analysis folder, which should now be in: `/Archive/1_Pending/S100`*
+
+5)  `/Reference`
+
+    This is a spot to toss reference sequences. It's outside of the scope of this document but we felt that it would be useful to have a shared space for these.
+
+6)  `/Software`
+
+    -   This is where all of our custom software resides.
+
+    -   The scripts, files, and anything else associated with the pipeline are located here.
+
+    -   The pipeline files are within the `/GTscore_1.3` directory. This is linked to the [GitHub](https://github.com/csjalbert/GTscore_ADFG), but still try to be careful with moving or removing files . Generally, everything in here is necessary and should stay where it is.
+
+    -   This is a good spot to add custom analyses or pipelines that you want others to have access to.
+
+7)  `/tmp_HOLDING`
+
+    -   This folder is fun. It's a temporary space for doing whatever you want.
+
+    -   I find it useful for transferring files to and from Windows via Windows Explorer (permissions allow this). Then I log into Linux and move the files wherever I want.
+
+    -   I also use it for troubleshooting. For example, I'll usually copy an analysis here and troubleshoot oddball issues rather than editing within the analysis or archive folder. This allows me to easily move back and forth between operating systems, if necessary. It also ensures I don't do something too wild within our main project directories...
+
+        *WARNING--DO NOT STORE FILES HERE. You have a personal space for a reason. If we are in dire need of space, and I'm in a hurry, I'll get wild in here (e.g., `rm -r *`*). [*Please move non-temporary files elsewhere, when you are done, as this is the first place I'll look to gain space in a hurry.*]{.underline}
+
+# Project Setup (Pre-pipeline) {#project-setup-pre-pipeline}
+
+***Project leaders will be more involved moving forward and details should be added to this section as we iron out the process. I'll also note that there is an [GTSeq SOP for lab staff](https://stateofalaska.sharepoint.com/:w:/r/sites/DFG/DCF/GCL/lab/_layouts/15/Doc.aspx?sourcedoc=%7B4EE13E30-8491-4312-BC50-9E3C035AA847%7D&file=Lab%20Standard%20Operating%20Procedures%20Manual.docx&action=default&mobileredirect=true&DefaultItemOpen=1) (page \~271, "Data Processing") that may be helpful in explaining the overall pre-pipeline process.***
+
+Prior to doing anything on the server, the lab needs to know what to run. Project leaders are required to supply the panel (i.e., marker/primer/probe info) that goes with their project and whether it needs corrections. Corrections are either 1) read corrections, which are built into GTscore, or 2) rescores, which only applies to the IDFG_299 panel. At this point, the lab will need help running both of these types of corrections, so it's good to let them know ahead of time.
+
+Big picture, lab staff will run a project on the sequencer and transfer the files to the genetics domain. This is almost always done by lab staff but they do very rarely ask for assistance with file transfers, etc.
+
+Further, usually lab staff simply run the pipeline via Windows and project leads are not involved. I wrote a few scripts (see [From Windows (GUI via scripts)](#from-windows-gui-via-scripts)) that allow you to start the pipeline from a Windows machine, but sometimes staff run into issues or just want to know if the project is still running. This is where advanced users, like you, come in. You'll log into Linux and use [From Linux (CLI)](#from-linux-cli) to assess the situation.
+
+# Starting The Pipeline
+
+As mentioned, there are two methods for starting the pipeline. They both have pros and cons, but the second, [From Linux (CLI)](#from-linux-cli), is more reliable and recommended. Advanced users will lean towards this as they'll have access to more options, can monitor jobs, etc. That said, the lab staff can start the pipeline directly from the sequencer, which is ideal (see [From Windows (GUI via scripts)](#from-windows-gui-via-scripts)), since they can do it themselves.
+
+## Overview of Inputs
+
+Before we dive into starting a project, it's worth reviewing the inputs. There are only 4 things needed to run a project:
+
+1)  `bcldir` - Raw data that gets transferred from the sequencer. It will be in a directory and contain all the run files.
+
+2)  `barcodes` - "*GTSeq_SampleSheet.csv*", this is the list of barcodes for each sample (plate and well information). The file is generated by the lab during project set up. Soon it will be generated by LOKI/R but it's worth giving this a quick once over to look for obvious issues.
+
+3)  `probelist` - this is a text file that contains the primer/probe information. These files are located in `/Software/GTscore_1.3/Panels/` or on [GitHub](https://github.com/csjalbert/GTscore_ADFG/tree/master/Panels). The panel name should match whatever is listed in the `barcodes` (#2 above) file.
+
+4)  `correctreads` *Optional*, *only available on Linux* - This input is only required if you want to use read corrections during the LOKI conversion. It's a simple `true/false` statement with the default as `false`.
+
+    -   As of 9/2023, the only panels using read corrections are *ADFG_Coho_WDFW_333_V1* (or *ADFG_Coho_WDFW_331*) and *Sockeye_CRITFC_340*.
+    -   In short, read corrections only work on `*_single_snp` files, but the normal LOKI conversion script calls on `*_haplotypes` files (i.e., not-corrected). Setting this to `true` runs a LOKI script that acts on the `single_snp` files.
+    -   [IMPORTANT - at this point, anything that uses read corrections must be run from Linux]{.underline}[^5].
+        -   Project leads need to pay attention to this and let the lab know if they are using a panel with read corrections.
+
+[^5]: I haven't figured out how to add this input when using the Windows option, but will do so soon. Ideally, lab staff will run these projects right from Windows.
+
+## General Notes
+
+-   All analyses are included in a directory within their respective projects. These directories have time stamps in the names, so it's impossible to overwrite a past run.
+    -   There is no harm in having multiple analyses in the project directory.
+
+    -   All scripts, panel, barcode, and outputs are self contained within each analysis directory, for a clear record of what was run. The bcl directory is not copied due to file size.
+-   You have much more control when running a job via Linux. If possible, I recommend this route. I do not use the Windows method, unless troubleshooting for someone.
+-   The genotyping pipeline (GTscore_pipeline.R) sources GTscore.R, which contains many functions, however, we do not run everything. Feel free to explore this file and included functions for more functionality.
+-   Reviewing GTscore_pipeline.R will give an idea of what we run and the order that it is run. Note that this is not the entire process, just the R script for genotyping.
+-   There are many panels available and some have very similar names. Pay close attention to the names when selecting a panel (e.g., "IDFG_299" vs "IDFG_298")
+
+## Windows (GUI w/ scripts) {#from-windows-gui-via-scripts}
+
+*Again, see lab staff* [SOP](https://stateofalaska.sharepoint.com/:w:/r/sites/DFG/DCF/GCL/lab/_layouts/15/Doc.aspx?sourcedoc=%7B4EE13E30-8491-4312-BC50-9E3C035AA847%7D&file=Lab%20Standard%20Operating%20Procedures%20Manual.docx&action=default&mobileredirect=true&DefaultItemOpen=1) (around page 271) *on how to start the pipeline from the sequencer.*
+
+In short, once all relevant files (i.e., bcl directory, panel, barcodes) are copied to the project directory, `winRun_GTscore.bat` is copied from `/Software/GTscore_1.3/Panels/` into the project directory (e.g., `/Illumina_DROPOFF/S100/`). Clicking on `winRun_GTscore.bat` starts the pipeline. There are a few basic checks that ensure a run started, 1) cmd window has a message saying the project is running and 2) a few files are generated in the project directory. Otherwise, that is it.
+
+Under the hood, `winRun_GTscore.bat` simply calls on a PowerShell script (`GTscore_WindowsRunner.ps1`) that moves files around then calls on the Bash script (`run_GTscore.sh`) that actually starts the pipeline. Clear as mud, right? No. It's overly complex due to permissions with running scripts (or lack of), and this is a way around the issue.
+
+### Warnings!
+
+There are occasional hiccups, network issues, something, that lead to job failures when using `winRun_GTscore.bat`. It's not reproducible and we haven't been able to reliably track down the issue. Sometimes lab staff tries 25 times and the 26th time works great....other times they just give up and ask for help. This is where you come in. You have the ability to log into Linux and run the project (see [From Linux (CLI)](#from-linux-cli) for details)!
+
+You may notice that there are no user-specified inputs (i.e., not typing anything in). Everything is automated depending on the files present in the project directory. That means that you can not have multiple panels or sample sheets in that directory when you click the .bat file. On the surface this seems okay, but there are many cases where this breaks down--multiple species on a run, redoing a run for some reason, etc. If you find yourself with multiple options for inputs in the same project directory, you'll need to use Linux or delete the file(s) you don't want to run right then.
+
+As mentioned previously, at this point, read corrections cannot be run via Windows. Hopefully this will change at some point but in the meantime P/Ls must remind lab staff that they need to transfer everything to the server and wait for someone else to start it.
+
+## Linux (CLI) {#from-linux-cli}
+
+You've arrived. This is for the advanced user and requires the computer to be set up as discussed above. It also requires basic knowlege of the command line environment. Those paying attention may have gathered that there are many benefits to starting projects from a CLI -- job monitoring, full server access, ability to move files around, more control over inputs, more troubleshooting options, etc.
+
+We'll start with the golden code (remember this):
+
+`run_GTscore.sh bcldir barcodes probelist correctreads`
+
+`run_GTscore.sh` is the script that controls the pipeline. It starts it and does it all. You simply navigate to the project directory (`cd /mnt/anc_gen_cifs_research/Illumina_DROPOFF/S100`) and run this start up script from there.
+
+*pro tip - if you forget the inputs, or their order, you can just type `run_GTscore.sh` and hit enter. It will print a message with details.*
+
+*Additionally, I highly recommend using `screen` when running the pipeline. This ensures that project doesn't get run in your current terminal sessioin. Otherwise, it's very easy to accidentally kill the run. You can [read the manual](https://www.gnu.org/software/screen/manual/screen.html) or just trust me that this works:*
+
+*`screen -dmS S100`*
+
+### Description of Command Inputs
+
+*These are the same inputs as mentioned above but with server-specific details.*
+
+Putting the above together, we have a new golden code:
+
+`screen -dmS S100 run_GTscore.sh bcldir barcodes probelist correctreads`
+
+Here is an explanation of each piece:
+
+`screen -dmS S100` - start in the background, with the name "S100". For those yearning for a bit more, this starts `screen` in detached mode (`-dm`), so it doesn't open automatically and names the session (`-S`) "*S100"*, so you can more easily identify it.
+
+`run_GTscore.sh` - this is the script that controls the pipeline. It calls on the Perl, R, etc. scripts that make up the pipeline. If you need to edit something, or run specific parts of the pipeline, this is a place to start.
+
+`bcldir` - this is the raw data coming off the sequencer. Once the sequencer is done, lab staff transfer this over to the server.
+
+`barcodes` - This is a csv containing a list of samples and their unique IDs. Again, lab staff should transfer this to the project directory. We call this file "*GTseq_SampleSheet_xxx.csv*"
+
+`probelist` - This is the panel. Lab staff will transfer this to the project directory when they add the bcldir and barcodes.
+
+-   panels can be found here: `/Software/GTscore_1.3/Panels/`
+
+-   The panel name should match what's in "*GTseq_SampleSheet_xxx.csv*"[^6].
+
+    -   It's a good idea to double check and make sure the project directory contains the right file!
+
+[^6]: The pipeline doesn't actually care about the name in the sample sheet (i.e., names do not have to match), but if they do not, it's an indicator that something is wrong. Plus, it leads to confusion in terms of which panel was actually run, so it's good form for them to match.
+
+`correctreads` - A `true` or `false` statement that determines which LOKI conversion script to run (i.e., read corrected or not)
+
+### Quick (4-step) project run {#quick-3-step-project-run}
+
+**If nothing else read this section for how to start a project via terminal!**
+
+Here is a basic, 4-step process for starting a project from the terminal. Using the example project `S100`, and assuming you're logged into the server:
+
+1)  Navigate to project directory:
+
+    `cd /mnt/anc_gen_cifs_research/Illumina_DROPOFF/S100`
+
+2)  Verify that all files are present in the project directory:
+
+    `ls`
+
+    -    *The bcldir: 1903904_NB330456_0043_AHT7JJADF/*
+
+    -   *The barcodes: GTseq_SampleSheet_H7TLHAFXY_063422.csv*
+
+    -   *The panel: Sockeye_CRITFC_340.txt*
+
+        *(Great, looks good, all 3 inputs accounted for!)*
+
+3)  Start the project:
+
+    *Note that I'm using `screen` here and I turned on the readcorrected LOKI file (i.e., true):*
+
+    `screen -dmS S100 run_GTscore.sh 1903904_NB330456_0043_AHT7JJADF GTseq_SampleSheet_H7TLHAFXY_063422.csv Sockeye_CRITFC_340.txt true`
+
+4)  Make sure it's running. There are a few ways to do this. I usually just do the first.
+
+    -   run `htop` or `top` but it's not as pretty
+        -   see [manual](https://www.man7.org/linux/man-pages/man1/htop.1.html) for details
+        -   This opens a screen displaying system processes
+        -   the list can be sorted by MEM or CPU or USER to more easily find the project (*Note you'll be looking for something starting with the name "screen"*).
+        -   Use the colorful bars at the top (CPU cores/RAM) to your advantage. These bars will be lit up if `htop` is run right after submitting a job. The first step in the pipeline uses all cores, so this can be a really quick check to make sure it's running.
+    -   run `screen -ls`
+        -   Shows a list of all active screens.
+        -   If `S100` (name given above), is not here, then something went wrong.
+    -   run `screen -r S100`
+        -   Resumes the screen session, `S100`
+        -   This logs into the screen that was started in the background. I do not recommend this unless you're familiar with the `screen` command and how to safely exit a screen. Typing the wrong thing here will kill the run.
+
+    If none of these work or you don't see what you're looking for, something went south. Buckle up, you're in for a ride. Good luck. Maybe something in [Troubleshooting] is helpful...or did you type everything correctly (bcldir, barcodes, probelist)?
+
+# Troubleshooting
+
+*This section serves to outline tips for working on common issues. It's a continual work in progress as we stumble into new things.*
+
+Generally, running the pipeline is fairly uneventful. There is very little back and forth with the lab. In fact, many times I don't even know they are running anything. There are a few 'common' issues that we've encountered, some of which have been mentioned already.
+
+## You can't connect to the server
+
+-   Check that you're on the VPN or plugged into the correct genetics domain port.
+
+-   Check that you're using the correct password, username, domain, and your credentials have not expired.
+
+-   Reboot and retry.
+
+-   Ask someone else to try their connection. Occasionally the server goes belly up and requires OIT intervention.
+
+-   Call me
+
+## Lab staff: "*The project won't start or I am getting an error*"
+
+-   You'll occasionally get this from lab staff who are having issues running the project from the server.
+
+-   I *highly* recommend just logging into Linux and starting the project manually (not via .bat file).
+
+    -   I've spent a lot of time troubleshooting non-issues/intermittent issues with Windows only to log into Linux and run it no problem.
+
+    -   I generally don't spend too much time troubleshooting Windows things, and just get it running using the CLI.
+
+-   If you're not able to take care of it right away, ask them to have another lab staff log into the sequencer and try it. Different users sometimes have better luck.
+
+## Lab staff: "*Are we there yet*"
+
+-   Lab staff have a very minimal amount of feedback, so sometimes ask if the project is complete. You can easily check by:
+
+    -   Looking in `/Analysis/GTscore/` for the project. If it's there it's not done.
+
+    -   Looking in `/Archive/1_Pending/` for the project. If it was moved here, the run is done.
+
+    -   Looking in `/Results_PICKUP` for the project. Lab staff should have already done this but sometimes they are away or can't for whatever reason. If the output was copied here then it's done.
+
+    -   Finally, run `htop` and look through the list for the project. You can sort by MEM or CPU or USER to more easily find it.
+
+-   Also, at this point lab staff have the timing down fairly well. If they think it's taking too long, it may be worth digging (I'd give it a few extra hours).
+
+    -   We've run into a few cases where projects stalled for whatever reason and killing then restarting was necessary.
+
+    -   This has to be done via CLI.
+
+    -   Before killing the job, its worth checking out some of the log files, or outputs, to see if it's actually dead.
+
+        -   kill a job by logging into screen and using control+c
+
+            `screen -r S100` - you should see some things, depending on what step it is
+
+            `control+c` - kills the job
+
+## You need to re-run a project
+
+-   All files are automatically moved into `/Archive/1_Pending/` upon completion of a run.
+
+-   The first step in re-running a project is moving it back into `/Illumina_DROPOFF/` e.g.,
+
+    `mv` `/mnt/anc_gen_cifs_research/Archive/1_Pending/S100 /mnt/anc_gen_cifs_research/Illumina_DROPOFF/`
+
+-   Now the job can be restarted as usual (after fixing the original issue)
+
+-   It's worth noting that all runs are saved in their own directory with a time stamp. This is so previous runs do not get overwritten with new attempts.
+
+    -   If there is an issue and you know the data is junk, there is no reason to keep the old run in the project folder. Please delete it before re-running the project. Failing to do so will lead to confusion and wasted space.
+
+## Multiple species on a run
+
+**You can not run the pipeline on the same set of data (*bcldir*), at the same time[^7].**
+
+[^7]: I mean, technically you can, but one of the runs will finish and move the files out from under the second run, leading to confusion and delay.
+
+-   This is a little tricky. Sometimes we run multiple species together, which means the pipeline has to be run twice.
+
+-   There are a few ways to go about this and the first is preferred unless the data is very time sensitive.
+
+    -   The first option is a multi-step approach with one species running at a time:
+
+        -   Lab staff pick their favorite species and run the pipeline for that using Windows.
+
+        -   After the first run is done, an advanced user will move the project from the archives back into `/Illumina_DROPOFF/`, and add the second set of barcodes and panel.
+
+        -   Now the advanced user can start the second species via Linux, manually specifing which files are to be used
+
+    -   Another option is to duplicate the project directory in `/Illumina_DROPOFF/` then simply run each species at the same time, from their respective directories
+
+        -   Sometimes the lab does this if they need the data quickly
+        -   It allows them to run both via Windows and move along
+        -   This is not the preferred option as it:
+            -   unnecessarily doubles the amount of data were storing
+
+            -   can lead to confusion as to which species was run in each run, since project directories aren't always renamed to signify what they actually are are (e.g., "P029K014_reruns" vs "P029K014_reruns_2")
+
+            -   it becomes unclear that you're analyzing the same raw data in a different directory
+
+## Multiple panels for the same data
+
+**You can not run the pipeline on the same set of data (*bcldir*), at the same time**[^8]**.**
+
+[^8]: Again, technically you can, but one of the runs will finish and move the files out from under the second run, leading to more confusion and delay.
+
+-   This is a little tricky. Sometimes we run multiple panels for the same data.
+-   This is very similar to running multiple species, in that there is no way to run it in a single run.
+-   The pipeline is simply run twice, using one of the two methods described in [Multiple species on a run] The difference is the panel file is the only change for the second run (no need to change barcodes here).
+
+## Suspected storage issues
+
+-   As of Sept 2023, we're sitting at \~97% capacity or 2TB of space remaining. This will be eaten up quickly.
+
+-   Seemingly random issues with writes, or the server just failing to connect may be related to disk space[^9].
+
+-   check available disk space using `du -h`
+
+-   if we're very low (\>1TB), the first step would be to remove things from the temp directory. It's worth giving folks an opportunity to move needed things out if possible. The next step is to archive anything that's been completed as outlined in [Archiving]. You can also remove the outputs from `/Results_PICKUP` (remember these are copies so can always get them back). Finally, you can check the `Analysis/GTscore/` for old, remnant, analyses. Sometimes things fail and the files don't get removed.
+
+    -   note that if you delete things, it may take a little bit for the space to show as available (i.e., don't be surprised if you delete a bunch of junk and don't immediately see more space)
+
+[^9]: Part of my warning regarding storing files in /tmp_HOLDING is because we've run into issues where we've had no space remaining. The server dies and will fail to boot. I've had to get into the storage device with OIT and find things to remove before we are able to boot. Wiping out temporary files is a good way to free up enough space to boot and triage in a normal environment.
+
+# Archiving
+
+*This is a placeholder for steps involved with our archival process.*
+
+# Helpful Linux Resources
+
+***Warning! This guide assumes a basic level of Linux knowledge. Users who need help with this should search the web for existing tutorials and resources.***
+
+Warning aside, here is a short guide showing some of the important commands you'll need when using the command line interface. This guide will cover essential commands and tasks for navigating the command line and performing basic operations. This is just a handful of random commands, so I recommend searching the internet for more thorough tutorials.
+
+## Accessing the Command Line:
+
+To access the CLI, open PuTTY and log in to the genetics server. Set up and logging in is covered in the [Logging into the server] of this document. However, once logged in, you should automatically end up in your user home directory. It's from here that you will navigate and find your way around the sever.
+
+## Basic Navigation:
+
+-   `pwd` (Print Working Directory): Shows the current directory.
+
+-   `ls` (List): Lists the files and directories in the current directory.
+
+-   `cd` (Change Directory): Allows you to change your current directory.
+
+    -   Examples:
+
+        -   `cd Documents/` will change to the "Documents" directory,
+
+        -   `cd ..` will move up one directory level,
+
+        -   `cd ../..` will move up two directory levels.
+
+## File and Directory Operations:
+
+-   `mkdir` (Make Directory): Create a new directory.
+
+    -   Example: `mkdir NewFolder` will create a directory named "NewFolder"
+
+-   `touch` (Create Empty File): Create a new, empty file.
+
+    -   Example: `touch myfile.txt` will create a file named "myfile.txt"
+
+-   `cp` (Copy): Copy files or directories.
+
+    -   Example: `cp file1.txt /path/to/destination/` copies "file1.txt" to the specified destination.
+
+    -   For copying directories and their contents recursively, use `cp -r`:
+
+        -   Example: `cp -r myfolder /path/to/destination/` copies "myfolder" and its contents to the specified destination.
+
+-   `mv` (Move or Rename): Move files or directories to a new location or rename them.
+
+    -   Examples:
+
+        -   `mv file1.txt newname.txt` renames "file1.txt" to "newname.txt"
+
+        -   `mv myfolder/ /path/to/destination/` moves "myfolder" to the specified destination
+
+-   `rm` (Remove): Delete files or directories.
+
+    -   Example: `rm file1.txt` deletes "file1.txt"
+
+    -   **Be cautious with \`rm\` as it deletes files permanently!**
+
+        -   `rm -r myfolder/` will delete "myfolder" and its contents recursively, and without warning
+
+## Viewing File Content:
+
+-   `less`: Display the content of a text file in the terminal.
+
+    -   Example: `less myfile.txt` will show the contents of "myfile.txt".
+
+    -   Once in `less`, you can navigate as follows:
+
+        -   Use the arrow keys to scroll up and down.
+
+        -   Press `q` to exit `less` and return to the command prompt.
+
+        -   Press the spacebar to move forward one page.
+
+        -   Press `b` to move backward one page.
+
+        -   Type `/search_term` and press Enter to search for a specific term (i.e., search_term) in the file. The result will be highlighted.
+
+-   `cat` (Concatenate): Display the content of a text file in the terminal.
+
+    -   Example: `cat myfile.txt` will show the contents of "myfile.txt"
+
+## Searching for Files:
+
+-   `find`: Search for files and directories.
+
+    -   Example: `find /path/to/search -name filename.txt` searches for "filename.txt" in the specified path (i.e., path/to/search).
+
+## Permissions:
+
+-   Use `ls -l` to list files and their permissions.
+
+-   `chmod` (Change Mode): Modify file or directory permissions. This is something that you probably won't mess with but may occasionally run into permission issues. You should be comfortable or at least understand the basic principles before messing with these. This [guide](https://linuxhandbook.com/linux-file-permissions/) may be useful.
+
+    -   Example: `chmod 644 myfile.txt` sets read and write permissions for the owner and read-only for others (644).
+
+## Superuser (if needed):
+
+-   `sudo` (Superuser Do): Prefix commands with `sudo` to execute them with administrative privileges
+
+    -   Example: `sudo apt update` updates the package list.
+
+## Exiting the Terminal:
+
+-   To exit the terminal, you can type `exit` (you may need to do this twice, depending on your set up)
