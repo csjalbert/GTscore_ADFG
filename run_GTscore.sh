@@ -114,37 +114,39 @@ do
 		$(date): Rescored for LOKI (i.e., GTscore2LOKI_singleSNPs.pl - corrected scoring method used), since correctrescore was true.
 		"
 	fi
-	grep -v ",NTC," LOKI_input.csv > tmp; mv tmp LOKI_input.csv
+	grep -v ",NTC," LOKI_input.csv > tmp; mv tmp LOKI_input_raw.csv
 
-	#split LOKI inputs
-	head -n1 LOKI_input.csv > LOKI_header
-	sed -i 1d LOKI_input.csv
-	sort -k4 -n LOKI_input.csv > tmp; mv tmp LOKI_input.csv # Sort by PlateID, so plate-wide issues can be handled in same 'split file'
-	#split -l 500000 -a 1 --additional-suffix ".csv" LOKI_input.csv LOKI_input_split_
-	split -C 60MB -a 1 --additional-suffix ".csv" LOKI_input.csv LOKI_input_split_ #Split file at 60MB but end at whole line (-C)
-	loki_inputs=( $(ls LOKI_input_split_*) )
-	for input in "${loki_inputs[@]}"
-	do
-		cat LOKI_header $input > tmp
-		mv tmp $input
-	done
+# as of 10/2023, we're not splitting LOKI files as part of the pipeline. Instead, it will output the full file, which can be read into R and edited as needed prior to importing.
+	##split LOKI inputs
+	#head -n1 LOKI_input.csv > LOKI_header
+	#sed -i 1d LOKI_input.csv
+	#sort -k4 -n LOKI_input.csv > tmp; mv tmp LOKI_input.csv # Sort by PlateID, so plate-wide issues can be handled in same 'split file'
+	##split -l 500000 -a 1 --additional-suffix ".csv" LOKI_input.csv LOKI_input_split_
+	#split -C 60MB -a 1 --additional-suffix ".csv" LOKI_input.csv LOKI_input_split_ #Split file at 60MB but end at whole line (-C)
+	#loki_inputs=( $(ls LOKI_input_split_*) )
+	#for input in "${loki_inputs[@]}"
+	#do
+	#	cat LOKI_header $input > tmp
+	#	mv tmp $input
+	#done
 	
 	echo "
-        $(date): LOKI inputs for $project done.
+        #$(date): LOKI input for $project done.
 	"	
 	
 	#clean up project_outputs dir
-	cat LOKI_header LOKI_input.csv > tmp; mv tmp LOKI_input_all.csv
-	rm LOKI_header LOKI_input.csv
+	#cat LOKI_header LOKI_input.csv > tmp; mv tmp LOKI_input_all.csv
+	#rm LOKI_header LOKI_input.csv
 	rename "s/^/${project}_/" * #rename all files to the project name
 	rename "s/${project}_//g" ${project}_lib # remove project name from library directory for plotly genotype rate plot
 	cd ../split_seq/
 done
 
-#copy outputs to Results_PICKUP  Dir
+#copy outputs to Results_PICKUP Dir
 cd ../
 mkdir /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date}
-cp -r *outputs /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date}
+cp -r *outputs /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date} # copy project results to pickup dir
+#cp -r ${analysis_dir}/GTscore/ /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date} # copy scripts to pickup dir
 chmod -R 777 /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date}
 
 echo "
