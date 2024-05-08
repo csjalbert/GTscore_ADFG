@@ -90,7 +90,7 @@ If you're on an SOA computer, you very likely need the "*64-bit x86*" version. O
 
         -   Drive: `Z:`
 
-        -   Folder: `\\dfggenna-cifs.genetics.local`
+        -   Folder: `\\dfggenna-cifs.genetics.local\Research`
 
         -   `Check` `"Reconnect at sign-in"`
 
@@ -139,7 +139,7 @@ You should be logged into `/home/GENETICS.LOCAL/username` - this is your local a
 
 To access the pipeline-related section of the server you can navigate to:
 
-`/mnt/anc_gen_cifs_research/`
+`cd /mnt/anc_gen_cifs_research/`
 
 Here you'll see a set of directories that are required by the pipeline. These specific directories are necessary. **Do not modify them in any way or you will break things.** Also, permissions for each directory have been set to only allow access by certain individuals, again limiting who can make messes.
 
