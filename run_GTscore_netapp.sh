@@ -22,13 +22,13 @@ flowcell=$(echo $bcl_dir | cut -d"_" -f 4 | sed 's:/$::')
 cd ${bcl_dir}
 cd ../
 proj_descript=$(pwd | rev | cut -d"/" -f 1 | rev | sed 's/[ _]//g')
-analysis_dir="/mnt/scratch/GTscore/${proj_descript}_${flowcell}_${date}"
+analysis_dir="/mnt/anc_gen_cifs_research/Analysis/GTscore/${proj_descript}_${flowcell}_${date}"
 dropoff_dir=$(pwd)
 
 #setup analysis dir
 mkdir ${analysis_dir}
 mkdir ${analysis_dir}/GTscore/
-rsync -av -f"- */" -f"+ *" --exclude "sbsuser.sbsinfo" /mnt/anc_gen_cifs_research/Software/GTscore_1.3/ ${analysis_dir}/GTscore/
+rsync -av -f"- */" -f"+ *" --exclude "sbsusr.sbsinfo" /mnt/anc_gen_cifs_research/Software/GTscore_1.3/ ${analysis_dir}/GTscore/
 cp $probes ${analysis_dir}
 cp $barcodes ${analysis_dir}
 mkdir ${analysis_dir}/fastq
@@ -48,8 +48,7 @@ echo "
 
 #gunzip fastq
 cd ${analysis_dir}/fastq
-#gunzip Undetermined_S0_R1_001.fastq.gz 
-bgzip -d Undetermined_S0_R1_001.fastq.gz
+gunzip Undetermined_S0_R1_001.fastq.gz 
 echo "        
 	$(date): gunzip fastq done.
 
@@ -86,8 +85,15 @@ do
 	echo "
 	$(date): GTcalling for $project done.
 	"
+	
+	#create ADFG inhouse plots
+	Rscript ../GTscore/GTscore_ADFG_plots.R 2>&1 | tee ${analysis_dir}/logs/GTscoreplots.out
+        echo "        
+	$(date): Plots for $project done.
+	"
 
         #create ADFG inhouse plots via plotly
+	#keeping the old version until I am happy with plotly edition
         Rscript ../GTscore/GTscore_ADFG_plots_plotly.R 2>&1 | tee ${analysis_dir}/logs/GTscoreplotsplotly.out
         echo "
         $(date): Plots for $project done.
@@ -112,7 +118,7 @@ do
 
 	
 	echo "
-        #$(date): LOKI input for $project done.
+        $(date): LOKI input for $project done.
 	"	
 	
 	#clean up project_outputs dir
@@ -127,7 +133,7 @@ done
 cd ../
 mkdir /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date}
 cp -r *outputs /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date} # copy project results to pickup dir
-cp -r GTscore/ /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date} # copy scripts to pickup dir
+cp -r ${analysis_dir}/GTscore/ /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date} # copy scripts to pickup dir
 chmod -R 777 /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date}
 
 echo "
@@ -142,3 +148,5 @@ mv ${dropoff_dir}/GTscore_WindowsRunner.ps1 ${analysis_dir}/GTscore/
 mv ${dropoff_dir}/winRun_GTscore.bat ${analysis_dir}/GTscore/
 mv ${analysis_dir} ${dropoff_dir}
 mv ${dropoff_dir} /mnt/anc_gen_cifs_research/Archive/1_Pending/
+echo " Final: $(date)"
+sleep 120m
