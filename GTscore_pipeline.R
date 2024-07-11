@@ -163,7 +163,7 @@ ggplot()+geom_histogram(data=singleSNP_summary,aes(x=AvgReadDepth),binwidth=20)+
   theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
 
 #plot genotype rate relative to average depth
-ggplot()+geom_point(data=singleSNP_summary,aes(x=AvgReadDepth,y=GenotypeRate))+ylim(0,1)+
+ggplot()+geom_point(data=singleSNP_summary,aes(x=AvgReadDepth,y=GenotypeRate))+ylim(-0.01,1.01)+
   labs(title="Genotype Rate vs Average Depth Single SNP", x="Average Depth", y="Genotype Rate")+
   theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
 
@@ -189,7 +189,7 @@ ggplot()+geom_histogram(data=haplotype_summary,aes(x=AvgReadDepth),binwidth=20)+
   theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
 
 #plot genotype rate relative to average depth
-ggplot()+geom_point(data=haplotype_summary,aes(x=AvgReadDepth,y=GenotypeRate))+ylim(0,1)+
+ggplot()+geom_point(data=haplotype_summary,aes(x=AvgReadDepth,y=GenotypeRate))+ylim(-0.01,1.01)+
   labs(title="Genotype Rate vs Average Depth Haplotypes", x="Average Depth", y="Genotype Rate")+
   theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
 
