@@ -94,17 +94,17 @@ pdf("SampleSummaryPlots.pdf")
 
 
 #plot histogram of genotype rate for single SNP data
-ggplot()+geom_histogram(data=GTscore_individualSummary,aes(x=GenotypeRate),binwidth=0.03)+xlim(-0.01,1.01)+
+ggplot()+geom_histogram(data=GTscore_individualSummary,aes(x=GenotypeRate),binwidth=0.03)+xlim(-0.04,1.04)+
   labs(title="Sample Genotype Rate Single SNP", x="Genotype Rate", y="Count")+
   theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
 
 #plot genotype rate for haplotype data
-ggplot()+geom_histogram(data=sample_genotypeRate_haplotypes,aes(x=GenotypeRate),binwidth=0.03)+
+ggplot()+geom_histogram(data=sample_genotypeRate_haplotypes,aes(x=GenotypeRate),binwidth=0.03)+xlim(-0.04,1.04)+
   labs(title="Sample Genotype Rate Haplotype", x="Genotype Rate", y="Count")+
   theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
 
 #plot histogram of Heterozygosity
-ggplot()+geom_histogram(data=GTscore_individualSummary,aes(x=Heterozygosity),binwidth=0.03)+xlim(-0.01,1.01)+
+ggplot()+geom_histogram(data=GTscore_individualSummary,aes(x=Heterozygosity),binwidth=0.03)+xlim(-0.04,1.04)+
   labs(title="Sample Heterozygosity", x="Heterozygosity", y="Count")+
   theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
 
@@ -139,6 +139,10 @@ dev.off()
 singleSNP_summary<-summarizeGTscore(singleSNP_alleleReads,singleSNP_locusTable, polyGenResults_singleSNP)
 #view results
 head(singleSNP_summary)
+#make AvgReadDepth 0 when N/A
+singleSNP_summary <- singleSNP_summary %>% 
+  dplyr::mutate(AvgReadDepth = dplyr::case_when(is.na(AvgReadDepth) & GenotypeRate == 0 ~ 0,
+                                                TRUE ~ AvgReadDepth))
 #write results
 write.table(singleSNP_summary,"singleSNP_summary.txt",quote=FALSE,sep="\t",row.names=FALSE)
 
@@ -146,6 +150,10 @@ write.table(singleSNP_summary,"singleSNP_summary.txt",quote=FALSE,sep="\t",row.n
 haplotype_summary<-summarizeGTscore(haplotype_alleleReads,haplotype_locusTable,polyGenResults_haplotypes)
 #view results
 head(haplotype_summary)
+#make AvgReadDepth 0 when N/A
+haplotype_summary <- haplotype_summary %>% 
+  dplyr::mutate(AvgReadDepth = dplyr::case_when(is.na(AvgReadDepth) & GenotypeRate == 0 ~ 0,
+                                                TRUE ~ AvgReadDepth))
 #write results
 write.table(haplotype_summary,"haplotype_summary.txt",quote=FALSE,sep="\t",row.names=FALSE)
 
@@ -153,7 +161,7 @@ write.table(haplotype_summary,"haplotype_summary.txt",quote=FALSE,sep="\t",row.n
 #GENERATE PLOTS FOR SINGLE SNP RESULTS
 #plot genotype rate
 pdf("LocusSummaryPlots.pdf")
-ggplot()+geom_histogram(data=singleSNP_summary,aes(x=GenotypeRate),binwidth=0.03)+xlim(-0.01,1.01)+
+ggplot()+geom_histogram(data=singleSNP_summary,aes(x=GenotypeRate),binwidth=0.03)+xlim(-0.04,1.04)+
   labs(title="Locus Genotype Rate Single SNP", x="Genotype Rate", y="Count")+
   theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
 
@@ -179,7 +187,7 @@ ggplot()+geom_histogram(data=singleSNP_summary,aes(x=majAF))+
 
 #GENERATE PLOTS FOR HAPLOTYPE RESULTS
 #plot genotype rate
-ggplot()+geom_histogram(data=haplotype_summary,aes(x=GenotypeRate),binwidth=0.03)+xlim(-0.01,1.01)+
+ggplot()+geom_histogram(data=haplotype_summary,aes(x=GenotypeRate),binwidth=0.03)+xlim(-0.04,1.04)+
   labs(title="Locus Genotype Rate Haplotypes", x="Genotype Rate", y="Count")+
   theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
 
