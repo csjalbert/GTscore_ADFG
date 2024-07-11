@@ -153,7 +153,7 @@ write.table(haplotype_summary,"haplotype_summary.txt",quote=FALSE,sep="\t",row.n
 #GENERATE PLOTS FOR SINGLE SNP RESULTS
 #plot genotype rate
 pdf("LocusSummaryPlots.pdf")
-ggplot()+geom_histogram(data=singleSNP_summary,aes(x=GenotypeRate),binwidth=0.03)+xlim(0,1)+
+ggplot()+geom_histogram(data=singleSNP_summary,aes(x=GenotypeRate),binwidth=0.03)+xlim(-0.01,1.01)+
   labs(title="Locus Genotype Rate Single SNP", x="Genotype Rate", y="Count")+
   theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
 
@@ -179,7 +179,7 @@ ggplot()+geom_histogram(data=singleSNP_summary,aes(x=majAF))+
 
 #GENERATE PLOTS FOR HAPLOTYPE RESULTS
 #plot genotype rate
-ggplot()+geom_histogram(data=haplotype_summary,aes(x=GenotypeRate),binwidth=0.03)+xlim(0,1)+
+ggplot()+geom_histogram(data=haplotype_summary,aes(x=GenotypeRate),binwidth=0.03)+xlim(-0.01,1.01)+
   labs(title="Locus Genotype Rate Haplotypes", x="Genotype Rate", y="Count")+
   theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
 
