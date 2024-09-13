@@ -70,6 +70,7 @@ singleSNP_sampleSummary<-summarizeSamples(genotypes = polyGenResults_singleSNP,a
 write.table(singleSNP_sampleSummary,"singleSNP_sampleSummary.txt",quote=FALSE,sep="\t")
 #combine AmpliconReadCounter individual summary data with GTscore sample summary
 GTscore_individualSummary<-merge(GTscore_individualSummary,singleSNP_sampleSummary,by.x="Sample",by.y="sample")
+GTscore_individualSummary <- GTscore_individualSummary %>% dplyr::mutate(NTC = grepl("NTC", Sample))  # define NTC
 
 ##summarize sample genotype rate
 ##calculate genotype rate per sample for single SNP data
@@ -78,6 +79,7 @@ write.table(sample_genotypeRate_singleSNP,"sample_genotypeRate_singleSNP.txt",qu
 
 ##calculate genotype rate per sample for haplotypes
 sample_genotypeRate_haplotypes<-sampleGenoRate(polyGenResults_haplotypes)
+sample_genotypeRate_haplotypes <- sample_genotypeRate_haplotypes %>% dplyr::mutate(NTC = grepl("NTC", sample))  # define NTC
 write.table(sample_genotypeRate_haplotypes,"sample_genotypeRate_haplotypes.txt",quote=FALSE,sep="\t")
 
 ##Individual Summaries Plots
@@ -94,49 +96,56 @@ pdf("SampleSummaryPlots.pdf")
 
 
 #plot histogram of genotype rate for single SNP data
-ggplot()+geom_histogram(data=GTscore_individualSummary,aes(x=GenotypeRate),binwidth=0.03)+xlim(-0.04,1.04)+
+ggplot()+geom_histogram(data=GTscore_individualSummary,aes(x=GenotypeRate,fill=NTC),binwidth=0.03)+xlim(-0.04,1.04)+
   labs(title="Sample Genotype Rate Single SNP", x="Genotype Rate", y="Count")+
-  theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
+  theme_bw()+scale_fill_manual(values=c("grey30","red"))+
+  theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5),legend.position="inside",legend.location="plot",legend.justification.inside=c(0.02,0.98))
 
 #plot genotype rate for haplotype data
-ggplot()+geom_histogram(data=sample_genotypeRate_haplotypes,aes(x=GenotypeRate),binwidth=0.03)+xlim(-0.04,1.04)+
+ggplot()+geom_histogram(data=sample_genotypeRate_haplotypes,aes(x=GenotypeRate,fill=NTC),binwidth=0.03)+xlim(-0.04,1.04)+
   labs(title="Sample Genotype Rate Haplotype", x="Genotype Rate", y="Count")+
-  theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
+  theme_bw()+scale_fill_manual(values=c("grey30","red"))+
+  theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5),legend.position="inside",legend.location="plot",legend.justification.inside=c(0.02,0.98))
 
 #plot histogram of Heterozygosity
-ggplot()+geom_histogram(data=GTscore_individualSummary,aes(x=Heterozygosity),binwidth=0.03)+xlim(-0.04,1.04)+
+ggplot()+geom_histogram(data=GTscore_individualSummary,aes(x=Heterozygosity,fill=NTC),binwidth=0.03)+xlim(-0.04,1.04)+
   labs(title="Sample Heterozygosity", x="Heterozygosity", y="Count")+
-  theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
+  theme_bw()+scale_fill_manual(values=c("grey30","red"))+
+  theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5),legend.position="inside",legend.location="plot",legend.justification.inside=c(0.98,0.98))
 
 #plot genotype rate vs primer probe reads
 #dashed line added at 90% genotype rate, this is not a strict threshold, just a goal to aim for
-ggplot()+geom_point(data=GTscore_individualSummary,aes(x=Primer.Probe.Reads,y=GenotypeRate))+
+ggplot()+geom_point(data=GTscore_individualSummary,aes(x=Primer.Probe.Reads,y=GenotypeRate,colour=NTC))+
   labs(title="Genotype Rate vs Total Reads per Sample", x="Primer Probe Reads", y="Genotype Rate")+
-  theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))+
+  theme_bw()+scale_colour_manual(values=c("black","red"))+
+  theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5),legend.position="inside",legend.location="plot",legend.justification.inside=c(0.98,0.02))+
   geom_hline(yintercept=0.9,lty="dashed")
 
 #plot heterozygosity vs primer probe reads
-ggplot()+geom_point(data=GTscore_individualSummary,aes(x=Primer.Probe.Reads,y=Heterozygosity))+
+ggplot()+geom_point(data=GTscore_individualSummary,aes(x=Primer.Probe.Reads,y=Heterozygosity,colour=NTC))+
   labs(title="Heterozygosity vs Total Reads per Sample", x="Primer Probe Reads", y="Heterozygosity")+
-  theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))#+
+  theme_bw()+scale_colour_manual(values=c("black","red"))+
+  theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5),legend.position="inside",legend.location="plot",legend.justification.inside=c(0.98,0.02))#+
   #geom_hline(yintercept=0.3, lty="dashed")
 
 #plot heterozygosity vs genotype rate per sample
-ggplot()+geom_point(data=GTscore_individualSummary,aes(x=GenotypeRate,y=Heterozygosity))+
+ggplot()+geom_point(data=GTscore_individualSummary,aes(x=GenotypeRate,y=Heterozygosity,colour=NTC))+
   labs(title="Heterozygosity vs Genotype Rate per Sample", x="Genotype Rate", y="Heterozygosity")+
-  theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
+  theme_bw()+scale_colour_manual(values=c("black","red"))+
+  theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5),legend.position="inside",legend.location="plot",legend.justification.inside=c(0.02,0.98))
 
 #plot heterozygosity vs contamination score per sample
-ggplot()+geom_point(data=GTscore_individualSummary,aes(x=conScore,y=Heterozygosity))+
+ggplot()+geom_point(data=GTscore_individualSummary,aes(x=conScore,y=Heterozygosity,colour=NTC))+
   labs(title="Heterozygosity vs Contamination Score per Sample", x="Contamination Score", y="Heterozygosity")+
-  theme_bw()+theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5))
+  theme_bw()+scale_colour_manual(values=c("black","red"))+
+  theme(plot.title=element_text(hjust=0.5),plot.subtitle=element_text(hjust=0.5),legend.position="inside",legend.location="plot",legend.justification.inside=c(0.98,0.02))
 
 dev.off()
 
 #Locus Summaries 
 #SummarizeData for Locus
-##summarize single SNP results
-singleSNP_summary<-summarizeGTscore(singleSNP_alleleReads,singleSNP_locusTable, polyGenResults_singleSNP)
+##summarize single SNP results, remove NTCs
+singleSNP_summary<-summarizeGTscore(singleSNP_alleleReads[,-grep(pattern="NTC",colnames(singleSNP_alleleReads))],singleSNP_locusTable,polyGenResults_singleSNP[,-grep(pattern="NTC",colnames(polyGenResults_singleSNP))])
 #view results
 head(singleSNP_summary)
 #make AvgReadDepth 0 when N/A
@@ -146,8 +155,8 @@ singleSNP_summary <- singleSNP_summary %>%
 #write results
 write.table(singleSNP_summary,"singleSNP_summary.txt",quote=FALSE,sep="\t",row.names=FALSE)
 
-##summarize haplotype results
-haplotype_summary<-summarizeGTscore(haplotype_alleleReads,haplotype_locusTable,polyGenResults_haplotypes)
+##summarize haplotype results, remove NTCs
+haplotype_summary<-summarizeGTscore(haplotype_alleleReads[,-grep(pattern="NTC",colnames(haplotype_alleleReads))],haplotype_locusTable,polyGenResults_haplotypes[,-grep(pattern="NTC",colnames(polyGenResults_haplotypes))])
 #view results
 head(haplotype_summary)
 #make AvgReadDepth 0 when N/A
