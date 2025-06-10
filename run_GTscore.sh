@@ -22,7 +22,7 @@ flowcell=$(echo $bcl_dir | cut -d"_" -f 4 | sed 's:/$::')
 cd ${bcl_dir}
 cd ../
 proj_descript=$(pwd | rev | cut -d"/" -f 1 | rev | sed 's/[ _]//g')
-analysis_dir="/mnt/scratch/GTscore/${proj_descript}_${flowcell}_${date}"
+analysis_dir="/mnt/data1/gtscore/Analysis/GTscore/${proj_descript}_${flowcell}_${date}"
 dropoff_dir=$(pwd)
 
 # Clean the probes - check for non-ASCII characters and remove them
@@ -33,7 +33,7 @@ mv "$3".cleaned "$3"
 #setup analysis dir
 mkdir ${analysis_dir}
 mkdir ${analysis_dir}/GTscore/
-rsync -av -f"- */" -f"+ *" --exclude "sbsuser.sbsinfo" /mnt/anc_gen_cifs_research/Software/GTscore_1.3/ ${analysis_dir}/GTscore/
+rsync -av -f"- */" -f"+ *" --exclude "sbsuser.sbsinfo" /mnt/data1/gtscore/Software/GTscore_1.3/ ${analysis_dir}/GTscore/
 cp $probes ${analysis_dir}
 cp $barcodes ${analysis_dir}
 mkdir ${analysis_dir}/fastq
@@ -41,7 +41,7 @@ mkdir ${analysis_dir}/logs
 
 
 #bcl2fastq conversion
-cp /mnt/anc_gen_cifs_research/Software/GTscore_1.3/dummySampleSheet.csv $bcl_dir/SampleSheet.csv
+cp /mnt/data1/gtscore/Software/GTscore_1.3/dummySampleSheet.csv $bcl_dir/SampleSheet.csv
 chmod 777 $bcl_dir/SampleSheet.csv
 nohup bcl2fastq --use-bases-mask y150,i6,i6 --no-lane-splitting --runfolder-dir ${bcl_dir} --output-dir ${analysis_dir}/fastq
 chmod 664 nohup.out
@@ -103,12 +103,12 @@ do
 	grep $project ../barcodes.txt > barcodes.txt
 	## Check if optional read corrected rescore input is TRUE and use relevant scoring conversion
 	if [ "$correctreads" = false ]; then
-		perl /mnt/anc_gen_cifs_research/Software/GTscore_1.3/GTscore2LOKI.pl 2>&1 | tee "${analysis_dir}/logs/LOKI.out"
+		perl /mnt/data1/gtscore/Software/GTscore_1.3/GTscore2LOKI.pl 2>&1 | tee "${analysis_dir}/logs/LOKI.out"
 		echo "
 		$(date): Not rescored for LOKI (i.e., GTscore2LOKI.pl - uncorrected scoring method used), since correctrescore was false.
 		"
 	else
-		perl /mnt/anc_gen_cifs_research/Software/GTscore_1.3/GTscore2LOKI_singleSNPs.pl 2>&1 | tee "${analysis_dir}/logs/LOKI.out"
+		perl /mnt/data1/gtscore/Software/GTscore_1.3/GTscore2LOKI_singleSNPs.pl 2>&1 | tee "${analysis_dir}/logs/LOKI.out"
 		echo "
 		$(date): Rescored for LOKI (i.e., GTscore2LOKI_singleSNPs.pl - corrected scoring method used), since correctrescore was true.
 		"
@@ -130,10 +130,10 @@ done
 
 #copy outputs to Results_PICKUP Dir
 cd ../
-mkdir /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date}
-cp -r *outputs /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date} # copy project results to pickup dir
-cp -r GTscore/ /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date} # copy scripts to pickup dir
-chmod -R 777 /mnt/anc_gen_cifs_research/Results_PICKUP/${proj_descript}_${date}
+mkdir /mnt/data1/gtscore/Results_PICKUP/${proj_descript}_${date}
+cp -r *outputs /mnt/data1/gtscore/Results_PICKUP/${proj_descript}_${date} # copy project results to pickup dir
+cp -r GTscore/ /mnt/data1/gtscore/Results_PICKUP/${proj_descript}_${date} # copy scripts to pickup dir
+chmod -R 777 /mnt/data1/gtscore/Results_PICKUP/${proj_descript}_${date}
 
 echo "
 END: $(date)"
@@ -146,4 +146,4 @@ mv ${dropoff_dir}/${proj_descript}.config ${analysis_dir}/logs/
 mv ${dropoff_dir}/GTscore_WindowsRunner.ps1 ${analysis_dir}/GTscore/
 mv ${dropoff_dir}/winRun_GTscore.bat ${analysis_dir}/GTscore/
 mv ${analysis_dir} ${dropoff_dir}
-mv ${dropoff_dir} /mnt/anc_gen_cifs_research/Archive/1_Pending/
+mv ${dropoff_dir} /mnt/data1/gtscore/Archive/1_Pending/
