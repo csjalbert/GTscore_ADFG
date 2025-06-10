@@ -25,6 +25,11 @@ proj_descript=$(pwd | rev | cut -d"/" -f 1 | rev | sed 's/[ _]//g')
 analysis_dir="/mnt/scratch/GTscore/${proj_descript}_${flowcell}_${date}"
 dropoff_dir=$(pwd)
 
+# Clean the probes - check for non-ASCII characters and remove them
+echo "Cleaning probe file: $3"
+tr -cd '\11\12\40-\176' < "$3" > "$3".cleaned
+mv "$3".cleaned "$3"
+
 #setup analysis dir
 mkdir ${analysis_dir}
 mkdir ${analysis_dir}/GTscore/
