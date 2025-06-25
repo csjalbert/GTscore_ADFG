@@ -2,12 +2,14 @@
 #GTscore_WindowsRunner.ps1
 #
 #Input:
-#	This script is fully automated and requires no user input. However, the bcl dir, barcodes (samplesheet),
-#	and panel file must be present in the working directory. 
+#	This script is fully automated but requies a few yes/no questions to be answered.
+#	However, the bcl dir, barcodes (samplesheet), and panel file must be present in the working directory. 
 #
 #Usage:
-#	This script is fully automated and is executed by running winRun_GTscore.bat.
-#
+#	This script is automated, after answering a few yes/no questions.
+#	It is executed by running winRun_GTscore.bat from the project directory, after confirming 
+# 	the bcl directory, samplesheet, and probe file is present in the project directory.
+#	
 #
 #Chase Jalbert
 #Alaska Department of Fish and Game
@@ -16,11 +18,11 @@
 #--------------------------------------------------------------------------------
 
 #find bcl, samplesheet, and panel
-$bcl = Get-ChildItem -Path ./ | ?{ $_.PSIsContainer }| Where-Object {$_.Name -like '*_NB501*'} | Foreach-Object {$_.Name} 
+$bcl = Get-ChildItem -Path ./ | Where-Object{ $_.PSIsContainer }| Where-Object {$_.Name -like '*_NB501*'} | Foreach-Object {$_.Name} 
 $sampleSheet = Get-ChildItem -Path ./ | Where-Object {$_.Extension -eq '.csv'} | Where-Object {$_.Name -like '*SampleSheet*'} | Foreach-Object {$_.Name}
 $panel = Get-ChildItem -Path ./ | Where-Object {$_.Extension -eq '.txt'} | Foreach-Object {$_.Name}
-$wdir = pwd | Convert-Path | %{$_ -replace ".*Illumina_DROPOFF\\","/mnt/anc_gen_cifs_research/Illumina_DROPOFF/"} 
-$projectID = pwd | Split-Path -leaf | %{$_ -replace "_",""}
+$wdir = Get-Location | Convert-Path | ForEach-Object{$_ -replace ".*Illumina_DROPOFF\\","/mnt/anc_gen_cifs_research/Illumina_DROPOFF/"} 
+$projectID = Get-Location | Split-Path -leaf | ForEach-Object{$_ -replace "_",""}
 
 #check if project with same name is already running. If so, do not start as this will lead to issues.
 if (Test-Path -Path ($projectID + '.screenlog') -PathType leaf) {
@@ -30,16 +32,42 @@ Exit
 }
 
 #get username and password for sbs user
-$usr= Get-ChildItem -Path ..\..\Software\GTscore_1.3\ | Where-Object {$_.Extension -eq '.sbsinfo'} | ForEach-Object {Get-Content $_.FullName} | Select -Index 0
-$pwd= Get-ChildItem -Path ..\..\Software\GTscore_1.3\ | Where-Object {$_.Extension -eq '.sbsinfo'} | ForEach-Object {Get-Content $_.FullName} | Select -Index 1
+$user= Get-ChildItem -Path ..\..\Software\GTscore_1.3\ | Where-Object {$_.Extension -eq '.sbsinfo'} | ForEach-Object {Get-Content $_.FullName} | Select-Object -Index 0
+$passwd= Get-ChildItem -Path ..\..\Software\GTscore_1.3\ | Where-Object {$_.Extension -eq '.sbsinfo'} | ForEach-Object {Get-Content $_.FullName} | Select-Object -Index 1
 
 #setting up logging for screen command
 $configfile = ($projectID + '.config')
 $configtext = ("logfile " + $projectID + ".screenlog`r`nlogfile flush 1`r`nlog on")
 $configtext | Out-String -Stream | Out-File $configfile -Encoding ASCII
 
+## Ask the first question
+#$question1 = New-Object -TypeName System.Windows.Forms.MessageBox
+#$question1Buttons = [System.Windows.Forms.MessageBoxButtons]::YesNo
+#$question1Icon = [System.Windows.Forms.MessageBoxIcon]::Question
+#$question1Result = $question1::Show("Are you using the IDFG299 panel?", "Confirmation", $question1Buttons, $question1Icon)
+
+#if ($question1Result -eq "Yes") {
+#    # User selected Yes
+#    $rescoreMessage = "Please tell Chase and Jodi that this needs to be manually rescored!"
+#    $rescoreTitle = "Rescore Confirmation"
+    
+#    # Show a message box with the rescore message
+#    $rescoreBox = New-Object -TypeName System.Windows.Forms.MessageBox
+#    $rescoreBox::Show($rescoreMessage, $rescoreTitle, [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information)
+#}
+
+## Ask the second question
+#$question2 = New-Object -TypeName System.Windows.Forms.MessageBox
+#$question2Buttons = [System.Windows.Forms.MessageBoxButtons]::YesNo
+#$question2Icon = [System.Windows.Forms.MessageBoxIcon]::Question
+#$question2Result = $question2::Show("Are you using the ADFG_Coho_WDFW_331 or Sockeye_CRITFC_340 panel?", "Confirmation", $question2Buttons, $question2Icon)
+
+## Convert the user's input to a boolean value
+#$correctrescore = $question2Result -eq "Yes"
+
+
 #run pipeline
-echo y | plink.exe $usr -pw $pwd "cd $wdir; perl -pi -e 's/\r\n/\n/g' $configfile; screen -l -c $configfile -dmSL $projectID bash /mnt/anc_gen_cifs_research/Software/GTscore_1.3/run_GTscore.sh $bcl $sampleSheet $panel"
+echo y | plink.exe $user -pw $passwd "cd $wdir; perl -pi -e 's/\r\n/\n/g' $configfile; screen -l -c $configfile -dmSL $projectID bash /mnt/anc_gen_cifs_research/Software/GTscore_1.3/run_GTscore.sh $bcl $sampleSheet $panel"
 Write-Output "Attempting to start $projectID run...`n"
 Start-Sleep  -s 5
 
