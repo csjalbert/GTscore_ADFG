@@ -55,8 +55,8 @@ exportGenepop(polyGenResults_haplotypes,haplotype_locusTable,filename="polyGenRe
 ##load sample data file
 #sampleMetaData<-read.delim("sampleMetaData.txt",header=TRUE)
 ##export in rubias format
-#exportRubias(polyGenResults_singleSNP,singleSNP_locusTable,sampleMetaData,filename="polyGenResults_singleSNP_rubias.txt")
-#exportRubias(polyGenResults_haplotypes,haplotype_locusTable,sampleMetaData,filename="polyGenResults_haplotypes_rubias.txt")
+exportRubias(polyGenResults_singleSNP,singleSNP_locusTable,sampleMetaData = NULL,filename="polyGenResults_singleSNP_rubias.txt")
+exportRubias(polyGenResults_haplotypes,haplotype_locusTable,sampleMetaData = NULL,filename="polyGenResults_haplotypes_rubias.txt")
 
 ##################
 #DATA SUMMARIES
