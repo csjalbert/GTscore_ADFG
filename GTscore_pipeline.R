@@ -145,7 +145,7 @@ dev.off()
 #Locus Summaries 
 #SummarizeData for Locus
 ##summarize single SNP results, remove NTCs
-singleSNP_summary<-summarizeGTscore(singleSNP_alleleReads[,-grep(pattern="NTC",colnames(singleSNP_alleleReads))],singleSNP_locusTable,polyGenResults_singleSNP[,-grep(pattern="NTC",colnames(polyGenResults_singleSNP))])
+singleSNP_summary<-summarizeGTscore(singleSNP_alleleReads[,!grepl(pattern="NTC",colnames(singleSNP_alleleReads))],singleSNP_locusTable,polyGenResults_singleSNP[,!grepl(pattern="NTC",colnames(polyGenResults_singleSNP))])
 #view results
 head(singleSNP_summary)
 #make AvgReadDepth 0 when N/A
@@ -156,7 +156,7 @@ singleSNP_summary <- singleSNP_summary %>%
 write.table(singleSNP_summary,"singleSNP_summary.txt",quote=FALSE,sep="\t",row.names=FALSE)
 
 ##summarize haplotype results, remove NTCs
-haplotype_summary<-summarizeGTscore(haplotype_alleleReads[,-grep(pattern="NTC",colnames(haplotype_alleleReads))],haplotype_locusTable,polyGenResults_haplotypes[,-grep(pattern="NTC",colnames(polyGenResults_haplotypes))])
+haplotype_summary<-summarizeGTscore(haplotype_alleleReads[,!grepl(pattern="NTC",colnames(haplotype_alleleReads))],haplotype_locusTable,polyGenResults_haplotypes[,!grepl(pattern="NTC",colnames(polyGenResults_haplotypes))])
 #view results
 head(haplotype_summary)
 #make AvgReadDepth 0 when N/A
